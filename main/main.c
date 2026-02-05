@@ -6,15 +6,16 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "esp_system.h"
+
 #include "esp_log.h"
-#include "soc/soc_caps.h"
+#include "esp_system.h"
 #include "sdkconfig.h"
+#include "soc/soc_caps.h"
 
 /* Componentes de comandos */
+#include "cmd_nvs.h"
 #include "cmd_system.h"
 #include "cmd_wifi.h"
-#include "cmd_nvs.h"
 
 /* CLI-API */
 #include "cli-api.h"
@@ -25,7 +26,7 @@
 #endif
 #endif
 
-static const char* TAG = "example";
+static const char *TAG = "example";
 
 /* ========================================================================== */
 /*                    EXEMPLOS DE COMANDOS USANDO CLI-API                     */
@@ -36,8 +37,8 @@ static const char* TAG = "example";
  */
 static int cmd_hello(int argc, char **argv)
 {
-    printf("Hello World! Bem-vindo ao console ESP32!\n");
-    return 0;
+  printf("Hello World! Bem-vindo ao console ESP32!\n");
+  return 0;
 }
 
 /**
@@ -47,62 +48,62 @@ static int cmd_hello(int argc, char **argv)
  */
 static int cmd_echo(cli_context_t *ctx)
 {
-    /* Argumento 0: mensagem (string obrigatória) */
-    const char *msg = ctx->args[0].str_value;
+  /* Argumento 0: mensagem (string obrigatória) */
+  const char *msg = ctx->args[0].str_value;
 
-    /* Argumento 1: número de repetições (int opcional, default=1) */
-    int repeat = (ctx->args[1].count > 0) ? ctx->args[1].int_value : 1;
+  /* Argumento 1: número de repetições (int opcional, default=1) */
+  int repeat = (ctx->args[1].count > 0) ? ctx->args[1].int_value : 1;
 
-    /* Argumento 2: uppercase flag (opcional) */
-    bool uppercase = ctx->args[2].flag_value;
+  /* Argumento 2: uppercase flag (opcional) */
+  bool uppercase = ctx->args[2].flag_value;
 
-    for (int i = 0; i < repeat; i++) {
-        if (uppercase) {
-            /* Imprime em maiúsculas */
-            for (const char *p = msg; *p; p++) {
-                printf("%c", (*p >= 'a' && *p <= 'z') ? (*p - 32) : *p);
-            }
-            printf("\n");
-        } else {
-            printf("%s\n", msg);
-        }
+  for (int i = 0; i < repeat; i++)
+  {
+    if (uppercase)
+    {
+      /* Imprime em maiúsculas */
+      for (const char *p = msg; *p; p++)
+      {
+        printf("%c", (*p >= 'a' && *p <= 'z') ? (*p - 32) : *p);
+      }
+      printf("\n");
     }
+    else
+    {
+      printf("%s\n", msg);
+    }
+  }
 
-    return 0;
+  return 0;
 }
 
 static const cli_command_t echo_cmd = {
-    .name = "echo",
-    .description = "Repete uma mensagem N vezes",
-    .hint = NULL,
-    .callback = cmd_echo,
-    .args = {
-        {
-            .short_opt = "m",
-            .long_opt = "msg",
-            .datatype = "<texto>",
-            .description = "Mensagem a ser exibida",
-            .type = CLI_ARG_TYPE_STRING,
-            .required = true
-        },
-        {
-            .short_opt = "n",
-            .long_opt = "repeat",
-            .datatype = "<N>",
-            .description = "Número de repetições (default: 1)",
-            .type = CLI_ARG_TYPE_INT,
-            .required = false
-        },
-        {
-            .short_opt = "u",
-            .long_opt = "uppercase",
-            .datatype = NULL,
-            .description = "Converte para maiúsculas",
-            .type = CLI_ARG_TYPE_FLAG,
-            .required = false
-        },
+  .name = "echo",
+  .description = "Repete uma mensagem N vezes",
+  .hint = NULL,
+  .callback = cmd_echo,
+  .args =
+    {
+      {.short_opt = "m",
+       .long_opt = "msg",
+       .datatype = "<texto>",
+       .description = "Mensagem a ser exibida",
+       .type = CLI_ARG_TYPE_STRING,
+       .required = true},
+      {.short_opt = "n",
+       .long_opt = "repeat",
+       .datatype = "<N>",
+       .description = "Número de repetições (default: 1)",
+       .type = CLI_ARG_TYPE_INT,
+       .required = false},
+      {.short_opt = "u",
+       .long_opt = "uppercase",
+       .datatype = NULL,
+       .description = "Converte para maiúsculas",
+       .type = CLI_ARG_TYPE_FLAG,
+       .required = false},
     },
-    .arg_count = 3,
+  .arg_count = 3,
 };
 
 /**
@@ -112,59 +113,60 @@ static const cli_command_t echo_cmd = {
  */
 static int cmd_calc(cli_context_t *ctx)
 {
-    int a = ctx->args[0].int_value;
-    int b = ctx->args[1].int_value;
-    bool verbose = ctx->args[2].flag_value;
+  int a = ctx->args[0].int_value;
+  int b = ctx->args[1].int_value;
+  bool verbose = ctx->args[2].flag_value;
 
-    if (verbose) {
-        printf("Calculando operações com A=%d e B=%d\n", a, b);
-        printf("  Soma:         %d + %d = %d\n", a, b, a + b);
-        printf("  Subtração:    %d - %d = %d\n", a, b, a - b);
-        printf("  Multiplicação:%d * %d = %d\n", a, b, a * b);
-        if (b != 0) {
-            printf("  Divisão:      %d / %d = %d\n", a, b, a / b);
-        } else {
-            printf("  Divisão:      indefinida (B=0)\n");
-        }
-    } else {
-        printf("Soma: %d\n", a + b);
+  if (verbose)
+  {
+    printf("Calculando operações com A=%d e B=%d\n", a, b);
+    printf("  Soma:         %d + %d = %d\n", a, b, a + b);
+    printf("  Subtração:    %d - %d = %d\n", a, b, a - b);
+    printf("  Multiplicação:%d * %d = %d\n", a, b, a * b);
+    if (b != 0)
+    {
+      printf("  Divisão:      %d / %d = %d\n", a, b, a / b);
     }
+    else
+    {
+      printf("  Divisão:      indefinida (B=0)\n");
+    }
+  }
+  else
+  {
+    printf("Soma: %d\n", a + b);
+  }
 
-    return 0;
+  return 0;
 }
 
 static const cli_command_t calc_cmd = {
-    .name = "calc",
-    .description = "Calculadora simples (soma, sub, mult, div)",
-    .hint = NULL,
-    .callback = cmd_calc,
-    .args = {
-        {
-            .short_opt = "a",
-            .long_opt = NULL,
-            .datatype = "<num>",
-            .description = "Primeiro número",
-            .type = CLI_ARG_TYPE_INT,
-            .required = true
-        },
-        {
-            .short_opt = "b",
-            .long_opt = NULL,
-            .datatype = "<num>",
-            .description = "Segundo número",
-            .type = CLI_ARG_TYPE_INT,
-            .required = true
-        },
-        {
-            .short_opt = "v",
-            .long_opt = "verbose",
-            .datatype = NULL,
-            .description = "Mostra todas as operações",
-            .type = CLI_ARG_TYPE_FLAG,
-            .required = false
-        },
+  .name = "calc",
+  .description = "Calculadora simples (soma, sub, mult, div)",
+  .hint = NULL,
+  .callback = cmd_calc,
+  .args =
+    {
+      {.short_opt = "a",
+       .long_opt = NULL,
+       .datatype = "<num>",
+       .description = "Primeiro número",
+       .type = CLI_ARG_TYPE_INT,
+       .required = true},
+      {.short_opt = "b",
+       .long_opt = NULL,
+       .datatype = "<num>",
+       .description = "Segundo número",
+       .type = CLI_ARG_TYPE_INT,
+       .required = true},
+      {.short_opt = "v",
+       .long_opt = "verbose",
+       .datatype = NULL,
+       .description = "Mostra todas as operações",
+       .type = CLI_ARG_TYPE_FLAG,
+       .required = false},
     },
-    .arg_count = 3,
+  .arg_count = 3,
 };
 
 /**
@@ -173,225 +175,260 @@ static const cli_command_t calc_cmd = {
  * Demonstra validação de entrada, múltiplos argumentos opcionais,
  * tratamento de erros e interação com hardware.
  *
- * Uso: gpio --pin <0-48> --mode <in|out|od> [--pull <up|down|none>] [--level <0|1>] [-i] [-s]
+ * Uso: gpio --pin <0-48> --mode <in|out|od> [--pull <up|down|none>] [--level
+ * <0|1>] [-i] [-s]
  *
  * Exemplos:
- *   gpio --pin 2 --mode out --level 1         # Configura GPIO2 como saída em HIGH
- *   gpio --pin 4 --mode in --pull up -i       # Configura GPIO4 como entrada com pull-up e mostra info
- *   gpio --pin 5 --mode od -s                 # Open-drain, salva no NVS
+ *   gpio --pin 2 --mode out --level 1         # Configura GPIO2 como saída em
+ * HIGH gpio --pin 4 --mode in --pull up -i       # Configura GPIO4 como entrada
+ * com pull-up e mostra info gpio --pin 5 --mode od -s                 #
+ * Open-drain, salva no NVS
  */
 
 #include "driver/gpio.h"
 
 /* Estrutura para armazenar configuração atual */
-typedef struct {
-    int pin;
-    gpio_mode_t mode;
-    gpio_pull_mode_t pull;
-    int level;
-    bool configured;
+typedef struct
+{
+  int pin;
+  gpio_mode_t mode;
+  gpio_pull_mode_t pull;
+  int level;
+  bool configured;
 } gpio_config_state_t;
 
 static gpio_config_state_t s_gpio_states[GPIO_NUM_MAX] = {0};
 
 static int cmd_gpio(cli_context_t *ctx)
 {
-    /* Extrai argumentos */
-    int pin = ctx->args[0].int_value;
-    const char *mode_str = ctx->args[1].str_value;
-    const char *pull_str = (ctx->args[2].count > 0) ? ctx->args[2].str_value : "none";
-    bool level_specified = (ctx->args[3].count > 0);
-    int level = level_specified ? ctx->args[3].int_value : -1;  /* -1 = não especificado */
-    bool show_info = ctx->args[4].flag_value;
-    bool save_nvs = ctx->args[5].flag_value;
+  /* Extrai argumentos */
+  int pin = ctx->args[0].int_value;
+  const char *mode_str = ctx->args[1].str_value;
+  const char *pull_str = (ctx->args[2].count > 0) ? ctx->args[2].str_value : "none";
+  bool level_specified = (ctx->args[3].count > 0);
+  int level = level_specified ? ctx->args[3].int_value : -1; /* -1 = não especificado */
+  bool show_info = ctx->args[4].flag_value;
+  bool save_nvs = ctx->args[5].flag_value;
 
-    /* ========== Validação do PIN ========== */
-    if (pin < 0 || pin >= GPIO_NUM_MAX) {
-        printf("ERRO: GPIO %d inválido. Use 0-%d\n", pin, GPIO_NUM_MAX - 1);
-        return 1;
+  /* ========== Validação do PIN ========== */
+  if (pin < 0 || pin >= GPIO_NUM_MAX)
+  {
+    printf("ERRO: GPIO %d inválido. Use 0-%d\n", pin, GPIO_NUM_MAX - 1);
+    return 1;
+  }
+
+  /* Verifica pinos reservados (ESP32-S3 específico) */
+  const int reserved_pins[] = {19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};
+  for (size_t i = 0; i < sizeof(reserved_pins) / sizeof(reserved_pins[0]); i++)
+  {
+    if (pin == reserved_pins[i])
+    {
+      printf("AVISO: GPIO %d pode ser reservado para flash/PSRAM\n", pin);
     }
+  }
 
-    /* Verifica pinos reservados (ESP32-S3 específico) */
-    const int reserved_pins[] = {19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};
-    for (size_t i = 0; i < sizeof(reserved_pins)/sizeof(reserved_pins[0]); i++) {
-        if (pin == reserved_pins[i]) {
-            printf("AVISO: GPIO %d pode ser reservado para flash/PSRAM\n", pin);
-        }
+  /* ========== Parse do modo ========== */
+  gpio_mode_t gpio_mode;
+  if (strcmp(mode_str, "in") == 0 || strcmp(mode_str, "input") == 0)
+  {
+    gpio_mode = GPIO_MODE_INPUT;
+  }
+  else if (strcmp(mode_str, "out") == 0 || strcmp(mode_str, "output") == 0)
+  {
+    gpio_mode = GPIO_MODE_OUTPUT;
+  }
+  else if (strcmp(mode_str, "od") == 0 || strcmp(mode_str, "open-drain") == 0)
+  {
+    gpio_mode = GPIO_MODE_OUTPUT_OD;
+  }
+  else if (strcmp(mode_str, "inout") == 0)
+  {
+    gpio_mode = GPIO_MODE_INPUT_OUTPUT;
+  }
+  else if (strcmp(mode_str, "inout_od") == 0)
+  {
+    gpio_mode = GPIO_MODE_INPUT_OUTPUT_OD;
+  }
+  else
+  {
+    printf("ERRO: Modo '%s' inválido. Use: in, out, od, inout, inout_od\n", mode_str);
+    return 1;
+  }
+
+  /* ========== Parse do pull ========== */
+  gpio_pull_mode_t pull_mode;
+  bool enable_pullup = false;
+  bool enable_pulldown = false;
+
+  if (strcmp(pull_str, "up") == 0)
+  {
+    pull_mode = GPIO_PULLUP_ONLY;
+    enable_pullup = true;
+  }
+  else if (strcmp(pull_str, "down") == 0)
+  {
+    pull_mode = GPIO_PULLDOWN_ONLY;
+    enable_pulldown = true;
+  }
+  else if (strcmp(pull_str, "both") == 0)
+  {
+    pull_mode = GPIO_PULLUP_PULLDOWN;
+    enable_pullup = true;
+    enable_pulldown = true;
+  }
+  else if (strcmp(pull_str, "none") == 0 || strcmp(pull_str, "float") == 0)
+  {
+    pull_mode = GPIO_FLOATING;
+  }
+  else
+  {
+    printf("ERRO: Pull '%s' invalido. Use: up, down, both, none\n", pull_str);
+    return 1;
+  }
+
+  /* ========== Determina o nivel a usar ========== */
+  /* Se o usuario nao especificou -l, mantem o nivel salvo internamente */
+  /* NOTA: gpio_get_level() retorna sempre 0 se o pino for somente OUTPUT! */
+  if (!level_specified)
+  {
+    if (s_gpio_states[pin].configured)
+    {
+      /* GPIO ja configurado: usa o nivel salvo internamente */
+      level = s_gpio_states[pin].level;
     }
-
-    /* ========== Parse do modo ========== */
-    gpio_mode_t gpio_mode;
-    if (strcmp(mode_str, "in") == 0 || strcmp(mode_str, "input") == 0) {
-        gpio_mode = GPIO_MODE_INPUT;
-    } else if (strcmp(mode_str, "out") == 0 || strcmp(mode_str, "output") == 0) {
-        gpio_mode = GPIO_MODE_OUTPUT;
-    } else if (strcmp(mode_str, "od") == 0 || strcmp(mode_str, "open-drain") == 0) {
-        gpio_mode = GPIO_MODE_OUTPUT_OD;
-    } else if (strcmp(mode_str, "inout") == 0) {
-        gpio_mode = GPIO_MODE_INPUT_OUTPUT;
-    } else if (strcmp(mode_str, "inout_od") == 0) {
-        gpio_mode = GPIO_MODE_INPUT_OUTPUT_OD;
-    } else {
-        printf("ERRO: Modo '%s' inválido. Use: in, out, od, inout, inout_od\n", mode_str);
-        return 1;
+    else
+    {
+      /* Primeira configuracao: usa 0 como padrao */
+      level = 0;
     }
+  }
 
-    /* ========== Parse do pull ========== */
-    gpio_pull_mode_t pull_mode;
-    bool enable_pullup = false;
-    bool enable_pulldown = false;
+  /* ========== Validação do nível ========== */
+  if (level != 0 && level != 1)
+  {
+    printf("ERRO: Nível deve ser 0 ou 1, recebido: %d\n", level);
+    return 1;
+  }
 
-    if (strcmp(pull_str, "up") == 0) {
-        pull_mode = GPIO_PULLUP_ONLY;
-        enable_pullup = true;
-    } else if (strcmp(pull_str, "down") == 0) {
-        pull_mode = GPIO_PULLDOWN_ONLY;
-        enable_pulldown = true;
-    } else if (strcmp(pull_str, "both") == 0) {
-        pull_mode = GPIO_PULLUP_PULLDOWN;
-        enable_pullup = true;
-        enable_pulldown = true;
-    } else if (strcmp(pull_str, "none") == 0 || strcmp(pull_str, "float") == 0) {
-        pull_mode = GPIO_FLOATING;
-    } else {
-        printf("ERRO: Pull '%s' invalido. Use: up, down, both, none\n", pull_str);
-        return 1;
-    }
+  /* ========== Configuração do GPIO ========== */
+  printf("\n+-----------------------------------------+\n");
+  printf("|       Configurando GPIO %-2d              |\n", pin);
+  printf("+-----------------------------------------+\n");
 
-    /* ========== Determina o nivel a usar ========== */
-    /* Se o usuario nao especificou -l, mantem o nivel salvo internamente */
-    /* NOTA: gpio_get_level() retorna sempre 0 se o pino for somente OUTPUT! */
-    if (!level_specified) {
-        if (s_gpio_states[pin].configured) {
-            /* GPIO ja configurado: usa o nivel salvo internamente */
-            level = s_gpio_states[pin].level;
-        } else {
-            /* Primeira configuracao: usa 0 como padrao */
-            level = 0;
-        }
-    }
+  gpio_config_t io_conf = {
+    .pin_bit_mask = (1ULL << pin),
+    .mode = gpio_mode,
+    .pull_up_en = enable_pullup ? GPIO_PULLUP_ENABLE : GPIO_PULLUP_DISABLE,
+    .pull_down_en = enable_pulldown ? GPIO_PULLDOWN_ENABLE : GPIO_PULLDOWN_DISABLE,
+    .intr_type = GPIO_INTR_DISABLE,
+  };
 
-    /* ========== Validação do nível ========== */
-    if (level != 0 && level != 1) {
-        printf("ERRO: Nível deve ser 0 ou 1, recebido: %d\n", level);
-        return 1;
-    }
-
-    /* ========== Configuração do GPIO ========== */
-    printf("\n+-----------------------------------------+\n");
-    printf("|       Configurando GPIO %-2d              |\n", pin);
+  esp_err_t ret = gpio_config(&io_conf);
+  if (ret != ESP_OK)
+  {
+    printf("|  ERRO: %-30s |\n", esp_err_to_name(ret));
     printf("+-----------------------------------------+\n");
+    return 1;
+  }
 
-    gpio_config_t io_conf = {
-        .pin_bit_mask = (1ULL << pin),
-        .mode = gpio_mode,
-        .pull_up_en = enable_pullup ? GPIO_PULLUP_ENABLE : GPIO_PULLUP_DISABLE,
-        .pull_down_en = enable_pulldown ? GPIO_PULLDOWN_ENABLE : GPIO_PULLDOWN_DISABLE,
-        .intr_type = GPIO_INTR_DISABLE,
-    };
+  /* Define nível se for saída */
+  if (gpio_mode == GPIO_MODE_OUTPUT || gpio_mode == GPIO_MODE_OUTPUT_OD || gpio_mode == GPIO_MODE_INPUT_OUTPUT ||
+      gpio_mode == GPIO_MODE_INPUT_OUTPUT_OD)
+  {
+    gpio_set_level(pin, level);
+  }
 
-    esp_err_t ret = gpio_config(&io_conf);
-    if (ret != ESP_OK) {
-        printf("|  ERRO: %-30s |\n", esp_err_to_name(ret));
-        printf("+-----------------------------------------+\n");
-        return 1;
-    }
+  /* Salva estado */
+  s_gpio_states[pin].pin = pin;
+  s_gpio_states[pin].mode = gpio_mode;
+  s_gpio_states[pin].pull = pull_mode;
+  s_gpio_states[pin].level = level;
+  s_gpio_states[pin].configured = true;
 
-    /* Define nível se for saída */
-    if (gpio_mode == GPIO_MODE_OUTPUT || gpio_mode == GPIO_MODE_OUTPUT_OD ||
-        gpio_mode == GPIO_MODE_INPUT_OUTPUT || gpio_mode == GPIO_MODE_INPUT_OUTPUT_OD) {
-        gpio_set_level(pin, level);
-    }
+  /* Exibe resultado */
+  const char *mode_names[] = {"DISABLE", "INPUT", "OUTPUT", "OUTPUT_OD", "INPUT_OUTPUT", "", "INPUT_OUTPUT_OD"};
+  const char *pull_names[] = {"PULLUP", "PULLDOWN", "UP+DOWN", "FLOATING"};
 
-    /* Salva estado */
-    s_gpio_states[pin].pin = pin;
-    s_gpio_states[pin].mode = gpio_mode;
-    s_gpio_states[pin].pull = pull_mode;
-    s_gpio_states[pin].level = level;
-    s_gpio_states[pin].configured = true;
+  printf("|  Modo:      %-27s |\n", mode_names[gpio_mode]);
+  printf("|  Pull:      %-27s |\n", pull_names[pull_mode]);
 
-    /* Exibe resultado */
-    const char *mode_names[] = {"DISABLE", "INPUT", "OUTPUT", "OUTPUT_OD", "INPUT_OUTPUT", "", "INPUT_OUTPUT_OD"};
-    const char *pull_names[] = {"PULLUP", "PULLDOWN", "UP+DOWN", "FLOATING"};
+  if (gpio_mode != GPIO_MODE_INPUT)
+  {
+    printf("|  Nivel:     %-27s |\n", level ? "HIGH (1)" : "LOW (0)");
+  }
 
-    printf("|  Modo:      %-27s |\n", mode_names[gpio_mode]);
-    printf("|  Pull:      %-27s |\n", pull_names[pull_mode]);
+  printf("|  Status:    %-27s |\n", "OK - Configurado");
 
-    if (gpio_mode != GPIO_MODE_INPUT) {
-        printf("|  Nivel:     %-27s |\n", level ? "HIGH (1)" : "LOW (0)");
-    }
+  /* ========== Salva no NVS (simulado) ========== */
+  if (save_nvs)
+  {
+    printf("+-----------------------------------------+\n");
+    printf("|  NVS: Configuracao salva!               |\n");
+    ESP_LOGI(TAG, "GPIO %d config saved to NVS (mode=%d, pull=%d, level=%d)", pin, gpio_mode, pull_mode, level);
+  }
 
-    printf("|  Status:    %-27s |\n", "OK - Configurado");
+  printf("+-----------------------------------------+\n\n");
 
-    /* ========== Salva no NVS (simulado) ========== */
-    if (save_nvs) {
-        printf("+-----------------------------------------+\n");
-        printf("|  NVS: Configuracao salva!               |\n");
-        ESP_LOGI(TAG, "GPIO %d config saved to NVS (mode=%d, pull=%d, level=%d)",
-                 pin, gpio_mode, pull_mode, level);
-    }
-
-    printf("+-----------------------------------------+\n\n");
-
-    return 0;
+  return 0;
 }
 
 static const cli_command_t gpio_cmd = {
-    .name = "gpio",
-    .description = "Configura um GPIO (modo, pull, nível)",
-    .hint = NULL,
-    .callback = cmd_gpio,
-    .args = {
-        {
-            .short_opt = "p",
-            .long_opt = "pin",
-            .datatype = "<0-48>",
-            .description = "Número do GPIO",
-            .type = CLI_ARG_TYPE_INT,
-            .required = true
-        },
-        {
-            .short_opt = "m",
-            .long_opt = "mode",
-            .datatype = "<in|out|od>",
-            .description = "Modo: in, out, od, inout, inout_od",
-            .type = CLI_ARG_TYPE_STRING,
-            .required = true
-        },
-        {
-            .short_opt = NULL,
-            .long_opt = "pull",
-            .datatype = "<up|down|none>",
-            .description = "Resistor pull: up, down, both, none",
-            .type = CLI_ARG_TYPE_STRING,
-            .required = false
-        },
-        {
-            .short_opt = "l",
-            .long_opt = "level",
-            .datatype = "<0|1>",
-            .description = "Nível inicial (para saída)",
-            .type = CLI_ARG_TYPE_INT,
-            .required = false
-        },
-        {
-            .short_opt = "i",
-            .long_opt = "info",
-            .datatype = NULL,
-            .description = "Mostra informações extras do GPIO",
-            .type = CLI_ARG_TYPE_FLAG,
-            .required = false
-        },
-        {
-            .short_opt = "s",
-            .long_opt = "save",
-            .datatype = NULL,
-            .description = "Salva configuração no NVS",
-            .type = CLI_ARG_TYPE_FLAG,
-            .required = false
-        },
+  .name = "gpio",
+  .description = "Configura um GPIO (modo, pull, nível)",
+  .hint = NULL,
+  .callback = cmd_gpio,
+  .args =
+    {
+      {
+        .short_opt = "p",
+        .long_opt = "pin",
+        .datatype = "<0-48>",
+        .description = "Número do GPIO",
+        .type = CLI_ARG_TYPE_INT,
+        .required = true,
+      },
+      {
+        .short_opt = "m",
+        .long_opt = "mode",
+        .datatype = "<in|out|od>",
+        .description = "Modo: in, out, od, inout, inout_od",
+        .type = CLI_ARG_TYPE_STRING,
+        .required = true,
+      },
+      {
+        .short_opt = NULL,
+        .long_opt = "pull",
+        .datatype = "<up|down|none>",
+        .description = "Resistor pull: up, down, both, none",
+        .type = CLI_ARG_TYPE_STRING,
+        .required = false,
+      },
+      {
+        .short_opt = "l",
+        .long_opt = "level",
+        .datatype = "<0|1>",
+        .description = "Nível inicial (para saída)",
+        .type = CLI_ARG_TYPE_INT,
+        .required = false,
+      },
+      {
+        .short_opt = "i",
+        .long_opt = "info",
+        .datatype = NULL,
+        .description = "Mostra informações extras do GPIO",
+        .type = CLI_ARG_TYPE_FLAG,
+        .required = false,
+      },
+      {
+        .short_opt = "s",
+        .long_opt = "save",
+        .datatype = NULL,
+        .description = "Salva configuração no NVS",
+        .type = CLI_ARG_TYPE_FLAG,
+        .required = false,
+      },
     },
-    .arg_count = 6,
+  .arg_count = 6,
 };
 
 /**
@@ -399,15 +436,15 @@ static const cli_command_t gpio_cmd = {
  */
 static void register_cli_api_examples(void)
 {
-    /* Comando simples */
-    cli_register_simple_command("hello", "Imprime Hello World", cmd_hello);
+  /* Comando simples */
+  cli_register_simple_command("hello", "Imprime Hello World", cmd_hello);
 
-    /* Comandos com argumentos */
-    cli_register_command(&echo_cmd);
-    cli_register_command(&calc_cmd);
-    cli_register_command(&gpio_cmd);
+  /* Comandos com argumentos */
+  cli_register_command(&echo_cmd);
+  cli_register_command(&calc_cmd);
+  cli_register_command(&gpio_cmd);
 
-    ESP_LOGI(TAG, "Comandos de exemplo CLI-API registrados: hello, echo, calc, gpio");
+  ESP_LOGI(TAG, "Comandos de exemplo CLI-API registrados: hello, echo, calc, gpio");
 }
 
 /* ========================================================================== */
@@ -416,46 +453,46 @@ static void register_cli_api_examples(void)
 
 void app_main(void)
 {
-    /* Configura e inicializa a CLI */
-    cli_config_t cli_cfg = {
-        .prompt = CONFIG_IDF_TARGET "> ",
-        .banner = "\n"
-                  "=== ESP32 CLI-API Demo ===\n"
-                  "Type 'help' to get the list of commands.\n"
-                  "Use UP/DOWN arrows for command history.\n"
-                  "Press TAB to auto-complete.\n"
-                  "\n"
-                  "CLI-API Examples:\n"
-                  "  hello              - Imprime Hello World\n"
-                  "  echo -m <msg>      - Repete mensagem (use -n N, -u)\n"
-                  "  calc -a N -b M     - Calculadora (use -v para verbose)\n"
-                  "  gpio -p N -m MODE  - Configura GPIO (use --pull, -l, -i, -s)\n"
-                  "===========================",
-        .register_help = true,
-        .store_history = true,      /* CLI-API gerencia a partição FATFS para histórico */
-    };
+  /* Configura e inicializa a CLI */
+  cli_config_t cli_cfg = {
+    .prompt = CONFIG_IDF_TARGET "> ",
+    .banner = "\n"
+              "=== ESP32 CLI-API Demo ===\n"
+              "Type 'help' to get the list of commands.\n"
+              "Use UP/DOWN arrows for command history.\n"
+              "Press TAB to auto-complete.\n"
+              "\n"
+              "CLI-API Examples:\n"
+              "  hello              - Imprime Hello World\n"
+              "  echo -m <msg>      - Repete mensagem (use -n N, -u)\n"
+              "  calc -a N -b M     - Calculadora (use -v para verbose)\n"
+              "  gpio -p N -m MODE  - Configura GPIO (use --pull, -l, -i, -s)\n"
+              "===========================",
+    .register_help = true,
+    .store_history = true, /* CLI-API gerencia a partição FATFS para histórico */
+  };
 
-    ESP_ERROR_CHECK(cli_init(&cli_cfg));
+  ESP_ERROR_CHECK(cli_init(&cli_cfg));
 
-    /* Registra comandos do sistema */
-    register_system_common();
+  /* Registra comandos do sistema */
+  register_system_common();
 #if SOC_LIGHT_SLEEP_SUPPORTED
-    register_system_light_sleep();
+  register_system_light_sleep();
 #endif
 #if SOC_DEEP_SLEEP_SUPPORTED
-    register_system_deep_sleep();
+  register_system_deep_sleep();
 #endif
 #if (CONFIG_ESP_WIFI_ENABLED || CONFIG_ESP_HOST_WIFI_ENABLED)
-    register_wifi();
+  register_wifi();
 #endif
-    register_nvs();
+  register_nvs();
 
-    /* Registra comandos de exemplo da CLI-API */
-    register_cli_api_examples();
+  /* Registra comandos de exemplo da CLI-API */
+  register_cli_api_examples();
 
-    /* Inicia o loop do console (bloqueia aqui) */
-    cli_run();
+  /* Inicia o loop do console (bloqueia aqui) */
+  cli_run();
 
-    /* Finaliza */
-    cli_deinit();
+  /* Finaliza */
+  cli_deinit();
 }
