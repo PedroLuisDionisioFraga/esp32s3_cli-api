@@ -1,6 +1,6 @@
 /**
  * @file cli-api.c
- * @brief Implementacao da API simplificada para comandos de console ESP-IDF
+ * @brief Implementation of simplified API for ESP-IDF console commands
  */
 
 #include "cli-api.h"
@@ -17,7 +17,7 @@
 #include <string.h>
 #include <unistd.h>
 
-/* Includes para perifericos de console */
+/* Includes for console peripherals */
 #include "driver/uart.h"
 #include "driver/uart_vfs.h"
 #if SOC_USB_SERIAL_JTAG_SUPPORTED
@@ -28,7 +28,7 @@
 #include "esp_vfs_cdcacm.h"
 #endif
 
-/* Includes para NVS e FATFS */
+/* Includes for NVS and FATFS */
 #include "esp_vfs_fat.h"
 #include "nvs.h"
 #include "nvs_flash.h"
@@ -36,50 +36,50 @@
 static const char *TAG = "cli-api";
 
 /* ========================================================================== */
-/*                           CONSTANTES INTERNAS                              */
+/*                           INTERNAL CONSTANTS                               */
 /* ========================================================================== */
 
 #define CLI_MOUNT_PATH "/data"
 #define CLI_HISTORY_PATH CLI_MOUNT_PATH "/history.txt"
 
 /* ========================================================================== */
-/*                           VARIAVEIS INTERNAS                               */
+/*                           INTERNAL VARIABLES                               */
 /* ========================================================================== */
 
-/** @brief Prompt do console */
+/** @brief Console prompt */
 static char s_prompt[CLI_PROMPT_MAX_LEN] = "esp> ";
 
-/** @brief Flag indicando se o console foi inicializado */
+/** @brief Flag indicating if console was initialized */
 static bool s_initialized = false;
 
-/** @brief Flag indicando se o historico esta habilitado */
+/** @brief Flag indicating if history is enabled */
 static bool s_store_history = false;
 
-/** @brief Handle do wear levelling (para FATFS) */
+/** @brief Wear levelling handle (for FATFS) */
 static wl_handle_t s_wl_handle = WL_INVALID_HANDLE;
 
 /**
- * @brief Estrutura interna para armazenar dados do comando registrado
+ * @brief Internal structure to store registered command data
  */
 typedef struct {
-  const cli_command_t *cmd_def; /**< Definicao original do comando */
+  const cli_command_t *cmd_def; /**< Original command definition */
   void *argtable[CLI_MAX_ARGS +
-                 1]; /**< Ponteiros para argtable3 (+1 para arg_end) */
-  uint8_t arg_count; /**< Quantidade de argumentos */
+                 1]; /**< Pointers to argtable3 (+1 for arg_end) */
+  uint8_t arg_count; /**< Number of arguments */
 } cli_registered_cmd_t;
 
-/** @brief Array de comandos registrados */
+/** @brief Array of registered commands */
 static cli_registered_cmd_t s_registered_cmds[CLI_MAX_COMMANDS];
 
-/** @brief Contador de comandos registrados */
+/** @brief Counter of registered commands */
 static uint8_t s_cmd_count = 0;
 
 /* ========================================================================== */
-/*                         INICIALIZACAO NVS E FATFS                          */
+/*                         NVS AND FATFS INITIALIZATION                       */
 /* ========================================================================== */
 
 /**
- * @brief Inicializa o NVS (Non-Volatile Storage)
+ * @brief Initialize NVS (Non-Volatile Storage)
  */
 static esp_err_t cli_init_nvs(void) {
   esp_err_t err = nvs_flash_init();
@@ -90,13 +90,13 @@ static esp_err_t cli_init_nvs(void) {
     err = nvs_flash_init();
   }
   if (err == ESP_OK) {
-    ESP_LOGI(TAG, "NVS inicializado");
+    ESP_LOGI(TAG, "NVS initialized");
   }
   return err;
 }
 
 /**
- * @brief Inicializa o sistema de arquivos FATFS para armazenar historico
+ * @brief Initialize FATFS filesystem to store history
  */
 static esp_err_t cli_init_filesystem(void) {
   const esp_vfs_fat_mount_config_t mount_config = {
@@ -107,47 +107,47 @@ static esp_err_t cli_init_filesystem(void) {
   esp_err_t err = esp_vfs_fat_spiflash_mount_rw_wl(CLI_MOUNT_PATH, "storage",
                                                    &mount_config, &s_wl_handle);
   if (err != ESP_OK) {
-    ESP_LOGE(TAG, "Falha ao montar FATFS (%s). Historico desabilitado.",
+    ESP_LOGE(TAG, "Failed to mount FATFS (%s). History disabled.",
              esp_err_to_name(err));
     return err;
   }
 
-  ESP_LOGI(TAG, "FATFS montado em %s", CLI_MOUNT_PATH);
+  ESP_LOGI(TAG, "FATFS mounted at %s", CLI_MOUNT_PATH);
   return ESP_OK;
 }
 
 /**
- * @brief Desmonta o sistema de arquivos FATFS
+ * @brief Unmount FATFS filesystem
  */
 static void cli_deinit_filesystem(void) {
   if (s_wl_handle != WL_INVALID_HANDLE) {
     esp_vfs_fat_spiflash_unmount_rw_wl(CLI_MOUNT_PATH, s_wl_handle);
     s_wl_handle = WL_INVALID_HANDLE;
-    ESP_LOGI(TAG, "FATFS desmontado");
+    ESP_LOGI(TAG, "FATFS unmounted");
   }
 }
 
 /* ========================================================================== */
-/*                    INICIALIZACAO DO PERIFERICO                             */
+/*                    PERIPHERAL INITIALIZATION                               */
 /* ========================================================================== */
 
 /**
- * @brief Inicializa o periferico de console (UART, USB CDC ou USB Serial JTAG)
+ * @brief Initialize console peripheral (UART, USB CDC or USB Serial JTAG)
  */
 static void cli_init_peripheral(void) {
-  /* Drena stdout antes de reconfigurar */
+  /* Drain stdout before reconfiguring */
   fflush(stdout);
   fsync(fileno(stdout));
 
 #if defined(CONFIG_ESP_CONSOLE_UART_DEFAULT) ||                                \
     defined(CONFIG_ESP_CONSOLE_UART_CUSTOM)
-  /* UART: Configura line endings */
+  /* UART: Configure line endings */
   uart_vfs_dev_port_set_rx_line_endings(CONFIG_ESP_CONSOLE_UART_NUM,
                                         ESP_LINE_ENDINGS_CR);
   uart_vfs_dev_port_set_tx_line_endings(CONFIG_ESP_CONSOLE_UART_NUM,
                                         ESP_LINE_ENDINGS_CRLF);
 
-  /* Configura UART */
+  /* Configure UART */
   const uart_config_t uart_config = {
       .baud_rate = CONFIG_ESP_CONSOLE_UART_BAUDRATE,
       .data_bits = UART_DATA_8_BITS,
@@ -165,14 +165,14 @@ static void cli_init_peripheral(void) {
   uart_vfs_dev_use_driver(CONFIG_ESP_CONSOLE_UART_NUM);
 
 #elif defined(CONFIG_ESP_CONSOLE_USB_CDC)
-  /* USB CDC: Configura line endings */
+  /* USB CDC: Configure line endings */
   esp_vfs_dev_cdcacm_set_rx_line_endings(ESP_LINE_ENDINGS_CR);
   esp_vfs_dev_cdcacm_set_tx_line_endings(ESP_LINE_ENDINGS_CRLF);
   fcntl(fileno(stdout), F_SETFL, 0);
   fcntl(fileno(stdin), F_SETFL, 0);
 
 #elif defined(CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG)
-  /* USB Serial JTAG: Configura line endings */
+  /* USB Serial JTAG: Configure line endings */
   usb_serial_jtag_vfs_set_rx_line_endings(ESP_LINE_ENDINGS_CR);
   usb_serial_jtag_vfs_set_tx_line_endings(ESP_LINE_ENDINGS_CRLF);
   fcntl(fileno(stdout), F_SETFL, 0);
@@ -189,15 +189,15 @@ static void cli_init_peripheral(void) {
 #error Unsupported console type
 #endif
 
-  /* Desabilita buffering no stdin */
+  /* Disable buffering on stdin */
   setvbuf(stdin, NULL, _IONBF, 0);
 }
 
 /**
- * @brief Inicializa a biblioteca linenoise e esp_console
+ * @brief Initialize linenoise library and esp_console
  */
 static void cli_init_linenoise(void) {
-  /* Inicializa esp_console */
+  /* Initialize esp_console */
   esp_console_config_t console_config = {.max_cmdline_args = CLI_MAX_ARGS,
                                          .max_cmdline_length =
                                              CLI_MAX_CMDLINE_LENGTH,
@@ -207,7 +207,7 @@ static void cli_init_linenoise(void) {
   };
   ESP_ERROR_CHECK(esp_console_init(&console_config));
 
-  /* Configura linenoise */
+  /* Configure linenoise */
   linenoiseSetMultiLine(1);
   linenoiseSetCompletionCallback(&esp_console_get_completion);
   linenoiseSetHintsCallback((linenoiseHintsCallback *)&esp_console_get_hint);
@@ -215,14 +215,14 @@ static void cli_init_linenoise(void) {
   linenoiseSetMaxLineLen(CLI_MAX_CMDLINE_LENGTH);
   linenoiseAllowEmpty(false);
 
-  /* Carrega historico se configurado */
+  /* Load history if configured */
   if (s_store_history) {
     linenoiseHistoryLoad(CLI_HISTORY_PATH);
   }
 
-  /* Detecta suporte a escape sequences */
+  /* Detect escape sequences support */
 #if defined(CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG)
-  /* USB Serial JTAG: pula deteccao, assume terminal inteligente */
+  /* USB Serial JTAG: skip detection, assume smart terminal */
   linenoiseSetDumbMode(0);
 #else
   const int probe_status = linenoiseProbe();
@@ -233,7 +233,7 @@ static void cli_init_linenoise(void) {
 }
 
 /**
- * @brief Configura o prompt do console
+ * @brief Configure console prompt
  */
 static void cli_setup_prompt(const char *prompt_str) {
   const char *prompt_temp = "esp> ";
@@ -280,7 +280,7 @@ esp_err_t cli_init(const cli_config_t *config) {
   if (config->store_history) {
     esp_err_t err = cli_init_filesystem();
     if (err != ESP_OK) {
-      ESP_LOGW(TAG, "Falha ao montar filesystem, historico desabilitado");
+      ESP_LOGW(TAG, "Failed to mount filesystem, history disabled");
       s_store_history = false;
     } else {
       s_store_history = true;
@@ -289,19 +289,19 @@ esp_err_t cli_init(const cli_config_t *config) {
     s_store_history = false;
   }
 
-  /* Inicializa periferico e linenoise */
+  /* Initialize peripheral and linenoise */
   cli_init_peripheral();
   cli_init_linenoise();
 
-  /* Configura prompt */
+  /* Configure prompt */
   cli_setup_prompt(config->prompt);
 
-  /* Registra comando help se solicitado */
+  /* Register help command if requested */
   if (config->register_help) {
     esp_console_register_help_command();
   }
 
-  /* Exibe banner */
+  /* Display banner */
   if (config->banner != NULL) {
     printf("\n%s\n", config->banner);
   } else {
@@ -318,19 +318,19 @@ esp_err_t cli_init(const cli_config_t *config) {
   }
 
   s_initialized = true;
-  ESP_LOGI(TAG, "CLI inicializado com sucesso");
+  ESP_LOGI(TAG, "CLI successfully initialized");
 
   return ESP_OK;
 }
 
 esp_err_t cli_run(void) {
   if (!s_initialized) {
-    ESP_LOGE(TAG, "CLI nao inicializado. Chame cli_init() primeiro.");
+    ESP_LOGE(TAG, "CLI not initialized. Call cli_init() first.");
     return ESP_ERR_INVALID_STATE;
   }
 
   while (true) {
-    /* Le linha do usuario */
+    /* Read line from user */
     char *line = linenoise(s_prompt);
 
     if (line == NULL) {
@@ -341,7 +341,7 @@ esp_err_t cli_run(void) {
 #endif
     }
 
-    /* Adiciona ao historico se nao vazio */
+    /* Add to history if not empty */
     if (strlen(line) > 0) {
       linenoiseHistoryAdd(line);
       if (s_store_history) {
@@ -349,25 +349,25 @@ esp_err_t cli_run(void) {
       }
     }
 
-    /* Executa o comando */
+    /* Execute the command */
     int ret;
     esp_err_t err = esp_console_run(line, &ret);
 
     if (err == ESP_ERR_NOT_FOUND) {
-      printf("Comando nao reconhecido\n");
+      printf("Command not recognized\n");
     } else if (err == ESP_ERR_INVALID_ARG) {
-      /* Comando vazio, ignora */
+      /* Empty command, ignore */
     } else if (err == ESP_OK && ret != ESP_OK) {
-      printf("Comando retornou erro: 0x%x (%s)\n", ret, esp_err_to_name(ret));
+      printf("Command returned error: 0x%x (%s)\n", ret, esp_err_to_name(ret));
     } else if (err != ESP_OK) {
-      printf("Erro interno: %s\n", esp_err_to_name(err));
+      printf("Internal error: %s\n", esp_err_to_name(err));
     }
 
-    /* Libera memoria alocada pelo linenoise */
+    /* Free memory allocated by linenoise */
     linenoiseFree(line);
   }
 
-  ESP_LOGE(TAG, "Console encerrado");
+  ESP_LOGE(TAG, "Console terminated");
   return ESP_OK;
 }
 
@@ -375,7 +375,7 @@ void cli_deinit(void) {
   if (s_initialized) {
     esp_console_deinit();
 
-    /* Desmonta filesystem se estava montado */
+    /* Unmount filesystem if it was mounted */
     if (s_store_history) {
       cli_deinit_filesystem();
       s_store_history = false;
@@ -383,22 +383,21 @@ void cli_deinit(void) {
 
     s_initialized = false;
     s_cmd_count = 0;
-    ESP_LOGI(TAG, "CLI finalizado");
+    ESP_LOGI(TAG, "CLI finalized");
   }
 }
 
 const char *cli_get_prompt(void) { return s_prompt; }
 
 /* ========================================================================== */
-/*                       REGISTRO DE COMANDOS                                 */
+/*                       COMMAND REGISTRATION                                 */
 /* ========================================================================== */
 
 /**
- * @brief Wrapper callback que faz parsing dos argumentos e chama o callback do
- * usuario
+ * @brief Wrapper callback that parses arguments and calls user callback
  */
 static int cli_command_wrapper(int argc, char **argv) {
-  /* Encontra o comando registrado pelo nome (argv[0]) */
+  /* Find registered command by name (argv[0]) */
   cli_registered_cmd_t *reg_cmd = NULL;
   for (int i = 0; i < s_cmd_count; i++) {
     if (strcmp(s_registered_cmds[i].cmd_def->name, argv[0]) == 0) {
@@ -408,16 +407,16 @@ static int cli_command_wrapper(int argc, char **argv) {
   }
 
   if (reg_cmd == NULL) {
-    ESP_LOGE(TAG, "Comando '%s' nao encontrado internamente", argv[0]);
+    ESP_LOGE(TAG, "Command '%s' not found internally", argv[0]);
     return 1;
   }
 
   const cli_command_t *cmd = reg_cmd->cmd_def;
 
-  /* Faz parsing dos argumentos usando argtable3 */
+  /* Parse arguments using argtable3 */
   int nerrors = arg_parse(argc, argv, reg_cmd->argtable);
 
-  /* Se houver erros de parsing, mostra e retorna */
+  /* If there are parsing errors, show and return */
   if (nerrors != 0) {
     struct arg_end *end = reg_cmd->argtable[cmd->arg_count];
     arg_print_errors(stderr, end, argv[0]);
@@ -529,12 +528,12 @@ esp_err_t cli_register_command(const cli_command_t *cmd) {
       break;
 
     default:
-      ESP_LOGE(TAG, "Tipo de argumento invalido: %d", arg->type);
+      ESP_LOGE(TAG, "Invalid argument type: %d", arg->type);
       return ESP_ERR_INVALID_ARG;
     }
 
     if (reg_cmd->argtable[i] == NULL) {
-      ESP_LOGE(TAG, "Falha ao alocar argumento %d", i);
+      ESP_LOGE(TAG, "Failed to allocate argument %d", i);
       for (int j = 0; j < i; j++) {
         free(reg_cmd->argtable[j]);
       }
@@ -542,10 +541,10 @@ esp_err_t cli_register_command(const cli_command_t *cmd) {
     }
   }
 
-  /* Adiciona arg_end no final */
+  /* Add arg_end at the end */
   reg_cmd->argtable[cmd->arg_count] = arg_end(cmd->arg_count + 1);
 
-  /* Registra o comando no esp_console */
+  /* Register command in esp_console */
   const esp_console_cmd_t esp_cmd = {
       .command = cmd->name,
       .help = cmd->description,
@@ -556,7 +555,7 @@ esp_err_t cli_register_command(const cli_command_t *cmd) {
 
   esp_err_t ret = esp_console_cmd_register(&esp_cmd);
   if (ret != ESP_OK) {
-    ESP_LOGE(TAG, "Falha ao registrar comando '%s': %s", cmd->name,
+    ESP_LOGE(TAG, "Failed to register command '%s': %s", cmd->name,
              esp_err_to_name(ret));
     arg_freetable(reg_cmd->argtable, cmd->arg_count + 1);
     return ret;

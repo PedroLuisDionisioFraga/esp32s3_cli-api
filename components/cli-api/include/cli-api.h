@@ -1,10 +1,10 @@
 /**
  * @file cli-api.h
- * @brief API simplificada para criar comandos de console no ESP-IDF
+ * @brief Simplified API for creating console commands in ESP-IDF
  *
- * Esta API abstrai a complexidade do esp_console e argtable3, permitindo
- * registrar comandos de forma simples usando uma struct descritiva.
- * Também gerencia a inicializacao do console e o loop principal.
+ * This API abstracts the complexity of esp_console and argtable3, allowing
+ * commands to be registered simply using a descriptive struct.
+ * Also manages console initialization and main loop.
  *
  * @author Pedro Luis Dionisio Fraga
  * @date 2026
@@ -22,110 +22,110 @@ extern "C" {
 #endif
 
 /* ========================================================================== */
-/*                              CONFIGURACOES                                 */
+/*                              CONFIGURATION                                 */
 /* ========================================================================== */
 
 /**
- * @brief Número máximo de argumentos por comando
+ * @brief Maximum number of arguments per command
  */
 #define CLI_MAX_ARGS 8
 
 /**
- * @brief Numero maximo de comandos registrados
+ * @brief Maximum number of registered commands
  */
 #define CLI_MAX_COMMANDS 32
 
 /**
- * @brief Tamanho maximo da linha de comando
+ * @brief Maximum command line length
  */
 #define CLI_MAX_CMDLINE_LENGTH 256
 
 /**
- * @brief Tamanho maximo do prompt
+ * @brief Maximum prompt size
  */
 #define CLI_PROMPT_MAX_LEN 32
 
 /**
- * @brief Tamanho do historico de comandos
+ * @brief Command history size
  */
 #define CLI_HISTORY_SIZE 100
 
 /* ========================================================================== */
-/*                           TIPOS E ESTRUTURAS                               */
+/*                           TYPES AND STRUCTURES                             */
 /* ========================================================================== */
 
 /**
- * @brief Tipos de argumentos suportados
+ * @brief Supported argument types
  */
 typedef enum {
-    CLI_ARG_TYPE_INT,       /**< Argumento inteiro (ex: --timeout 5000) */
-    CLI_ARG_TYPE_STRING,    /**< Argumento string (ex: --ssid "MinhaRede") */
-    CLI_ARG_TYPE_FLAG,      /**< Flag booleana (ex: -v ou --verbose) */
+    CLI_ARG_TYPE_INT,       /**< Integer argument (ex: --timeout 5000) */
+    CLI_ARG_TYPE_STRING,    /**< String argument (ex: --ssid "MyNetwork") */
+    CLI_ARG_TYPE_FLAG,      /**< Boolean flag (ex: -v or --verbose) */
 } cli_arg_type_t;
 
 /**
- * @brief Descritor de um argumento de comando
+ * @brief Command argument descriptor
  */
 typedef struct {
-    const char *short_opt;      /**< Opcao curta (ex: "t" para -t), NULL se nao tiver */
-    const char *long_opt;       /**< Opcao longa (ex: "timeout" para --timeout), NULL se nao tiver */
-    const char *datatype;       /**< Tipo exibido no help (ex: "<ms>", "<ssid>") */
-    const char *description;    /**< Descricao do argumento para o help */
-    cli_arg_type_t type;        /**< Tipo do argumento */
-    bool required;              /**< true = obrigatorio, false = opcional */
+    const char *short_opt;      /**< Short option (ex: "t" for -t), NULL if none */
+    const char *long_opt;       /**< Long option (ex: "timeout" for --timeout), NULL if none */
+    const char *datatype;       /**< Type displayed in help (ex: "<ms>", "<ssid>") */
+    const char *description;    /**< Argument description for help */
+    cli_arg_type_t type;        /**< Argument type */
+    bool required;              /**< true = required, false = optional */
 } cli_arg_t;
 
 /**
- * @brief Valores dos argumentos parseados (passados ao callback)
+ * @brief Parsed argument values (passed to callback)
  */
 typedef struct {
-    int int_value;              /**< Valor inteiro (valido se type == CLI_ARG_TYPE_INT) */
-    const char *str_value;      /**< Valor string (valido se type == CLI_ARG_TYPE_STRING) */
-    bool flag_value;            /**< Valor booleano (valido se type == CLI_ARG_TYPE_FLAG) */
-    int count;                  /**< Quantidade de vezes que o argumento apareceu (0 = nao informado) */
+    int int_value;              /**< Integer value (valid if type == CLI_ARG_TYPE_INT) */
+    const char *str_value;      /**< String value (valid if type == CLI_ARG_TYPE_STRING) */
+    bool flag_value;            /**< Boolean value (valid if type == CLI_ARG_TYPE_FLAG) */
+    int count;                  /**< Number of times the argument appeared (0 = not provided) */
 } cli_arg_value_t;
 
 /**
- * @brief Contexto passado ao callback do comando
+ * @brief Context passed to command callback
  */
 typedef struct {
-    int argc;                               /**< Numero de argumentos originais */
-    char **argv;                            /**< Argumentos originais */
-    cli_arg_value_t args[CLI_MAX_ARGS];     /**< Valores parseados dos argumentos */
-    uint8_t arg_count;                      /**< Quantidade de argumentos definidos */
+    int argc;                               /**< Number of original arguments */
+    char **argv;                            /**< Original arguments */
+    cli_arg_value_t args[CLI_MAX_ARGS];     /**< Parsed argument values */
+    uint8_t arg_count;                      /**< Number of defined arguments */
 } cli_context_t;
 
 /**
- * @brief Tipo do callback do comando
+ * @brief Command callback type
  *
- * @param ctx Contexto com argumentos parseados
- * @return int 0 para sucesso, valor diferente para erro
+ * @param ctx Context with parsed arguments
+ * @return int 0 for success, non-zero for error
  */
 typedef int (*cli_callback_t)(cli_context_t *ctx);
 
 /**
- * @brief Descritor completo de um comando CLI
+ * @brief Complete CLI command descriptor
  */
 typedef struct {
-    const char *name;               /**< Nome do comando (ex: "join", "version") */
-    const char *description;        /**< Descricao exibida no help */
-    const char *hint;               /**< Hint opcional mostrado durante digitacao */
-    cli_callback_t callback;        /**< Funcao callback executada quando comando e chamado */
-    cli_arg_t args[CLI_MAX_ARGS];   /**< Array de argumentos do comando */
-    uint8_t arg_count;              /**< Quantidade de argumentos em args[] */
+    const char *name;               /**< Command name (ex: "join", "version") */
+    const char *description;        /**< Description displayed in help */
+    const char *hint;               /**< Optional hint shown during typing */
+    cli_callback_t callback;        /**< Callback function executed when command is called */
+    cli_arg_t args[CLI_MAX_ARGS];   /**< Command arguments array */
+    uint8_t arg_count;              /**< Number of arguments in args[] */
 } cli_command_t;
 
 /**
- * @brief Configuracao do console CLI
+ * @brief CLI console configuration
  */
 typedef struct {
-    const char *prompt;             /**< Prompt do console (ex: "esp32>"). NULL usa padrao */
-    const char *banner;             /**< Mensagem de boas-vindas. NULL usa padrao */
-    bool register_help;             /**< true = registra comando 'help' automaticamente */
-    bool store_history;             /**< true = salva historico em filesystem (requer particao "storage") */
+    const char *prompt;             /**< Console prompt (ex: "esp32>"). NULL uses default */
+    const char *banner;             /**< Welcome message. NULL uses default */
+    bool register_help;             /**< true = automatically register 'help' command */
+    bool store_history;             /**< true = save history to filesystem (requires "storage" partition) */
 } cli_config_t;
 
-/** @brief Configuracao padrao do console */
+/** @brief Default console configuration */
 #define CLI_CONFIG_DEFAULT() { \
     .prompt = NULL,            \
     .banner = NULL,            \
@@ -134,79 +134,79 @@ typedef struct {
 }
 
 /* ========================================================================== */
-/*                       FUNCOES DE INICIALIZACAO                             */
+/*                       INITIALIZATION FUNCTIONS                             */
 /* ========================================================================== */
 
 /**
- * @brief Inicializa o console CLI completo
+ * @brief Initialize the complete CLI console
  *
- * Esta funcao inicializa o periferico de console (UART/USB),
- * a biblioteca linenoise e o esp_console.
+ * This function initializes the console peripheral (UART/USB),
+ * the linenoise library and esp_console.
  *
- * @param config Configuracao do console (pode ser NULL para usar padrao)
- * @return esp_err_t ESP_OK em sucesso
+ * @param config Console configuration (can be NULL to use default)
+ * @return esp_err_t ESP_OK on success
  */
 esp_err_t cli_init(const cli_config_t *config);
 
 /**
- * @brief Inicia o loop principal do console
+ * @brief Start the console main loop
  *
- * Esta funcao bloqueia e processa comandos continuamente.
- * Retorna apenas em caso de erro ou Ctrl+C.
+ * This function blocks and processes commands continuously.
+ * Returns only on error or Ctrl+C.
  *
- * @return esp_err_t ESP_OK se terminou normalmente
+ * @return esp_err_t ESP_OK if terminated normally
  */
 esp_err_t cli_run(void);
 
 /**
- * @brief Finaliza o console CLI
+ * @brief Finalize the CLI console
  *
- * Libera recursos alocados pelo console.
+ * Frees resources allocated by the console.
  */
 void cli_deinit(void);
 
 /**
- * @brief Retorna o prompt atual
+ * @brief Returns the current prompt
  *
- * @return const char* Ponteiro para o prompt
+ * @return const char* Pointer to the prompt
  */
 const char *cli_get_prompt(void);
 
 /* ========================================================================== */
-/*                       FUNCOES DE REGISTRO DE COMANDOS                      */
+/*                       COMMAND REGISTRATION FUNCTIONS                       */
 /* ========================================================================== */
 
 /**
- * @brief Registra um comando no console
+ * @brief Register a command in the console
  *
- * @param cmd Ponteiro para struct descrevendo o comando
+ * @param cmd Pointer to struct describing the command
  * @return esp_err_t
- *         - ESP_OK: Sucesso
- *         - ESP_ERR_INVALID_ARG: Parametro invalido
- *         - ESP_ERR_NO_MEM: Sem memoria para alocar argtable
+ *         - ESP_OK: Success
+ *         - ESP_ERR_INVALID_ARG: Invalid parameter
+ *         - ESP_ERR_NO_MEM: No memory to allocate argtable
  */
 esp_err_t cli_register_command(const cli_command_t *cmd);
 
 /**
- * @brief Registra um comando simples (sem argumentos)
+ * @brief Register a simple command (no arguments)
  *
- * Atalho para comandos que nao precisam de argumentos.
+ * Shortcut for commands that don't need arguments.
  *
- * @param name Nome do comando
- * @param description Descricao para o help
- * @param callback Funcao callback (recebe argc/argv padrao)
- * @return esp_err_t ESP_OK em sucesso
+ * @param name Command name
+ * @param description Description for help
+ * @param callback Callback function (receives standard argc/argv)
+ * @return esp_err_t ESP_OK on success
  */
 esp_err_t cli_register_simple_command(const char *name,
                                        const char *description,
                                        int (*callback)(int argc, char **argv));
 
 /**
- * @brief Registra multiplos comandos de uma vez
+ * @brief Register multiple commands at once
  *
- * @param commands Array de comandos
- * @param count Quantidade de comandos no array
- * @return esp_err_t ESP_OK se todos registrados com sucesso
+ * @param commands Array of commands
+ * @param count Number of commands in the array
+ * @return esp_err_t ESP_OK if all registered successfully
  */
 esp_err_t cli_register_commands(const cli_command_t *commands, size_t count);
 
