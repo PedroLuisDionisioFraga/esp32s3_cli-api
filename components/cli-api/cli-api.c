@@ -1,39 +1,46 @@
 /**
  * @file cli-api.c
- * @brief Implementation of simplified API for ESP-IDF console commands
+ * @author Pedro Luis Dionísio Fraga (pedrodfraga@hotmail.com)
+ *
+ * @brief A simple command-line interface (CLI) API for ESP32 using esp_console and argtable3.
+ *
+ * @version 0.1
+ * @date 2026-02-05
+ *
+ * @copyright Copyright (c) 2026
+ *
  */
 
 #include "cli-api.h"
 
+#include <argtable3/argtable3.h>
+#include <esp_console.h>
+#include <esp_log.h>
+#include <esp_system.h>
 #include <fcntl.h>
+#include <linenoise/linenoise.h>
+#include <sdkconfig.h>
+#include <soc/soc_caps.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include "argtable3/argtable3.h"
-#include "esp_console.h"
-#include "esp_log.h"
-#include "esp_system.h"
-#include "linenoise/linenoise.h"
-#include "sdkconfig.h"
-#include "soc/soc_caps.h"
-
 /* Includes for console peripherals */
-#include "driver/uart.h"
-#include "driver/uart_vfs.h"
+#include <driver/uart.h>
+#include <driver/uart_vfs.h>
 #if SOC_USB_SERIAL_JTAG_SUPPORTED
-#include "driver/usb_serial_jtag.h"
-#include "driver/usb_serial_jtag_vfs.h"
+#include <driver/usb_serial_jtag.h>
+#include <driver/usb_serial_jtag_vfs.h>
 #endif
 #if CONFIG_ESP_CONSOLE_USB_CDC
-#include "esp_vfs_cdcacm.h"
+#include <esp_vfs_cdcacm.h>
 #endif
 
 /* Includes for NVS and FATFS */
-#include "esp_vfs_fat.h"
-#include "nvs.h"
-#include "nvs_flash.h"
+#include <esp_vfs_fat.h>
+#include <nvs.h>
+#include <nvs_flash.h>
 
 static const char *TAG = "cli-api";
 
@@ -284,7 +291,7 @@ esp_err_t cli_init(const cli_config_t *config)
   esp_err_t err = cli_init_nvs();
   if (err != ESP_OK)
   {
-    ESP_LOGE(TAG, "Falha ao inicializar NVS");
+    ESP_LOGE(TAG, "Failed to initialize NVS");
     return err;
   }
 
@@ -516,17 +523,17 @@ esp_err_t cli_register_command(const cli_command_t *cmd)
 {
   if (cmd == NULL || cmd->name == NULL || cmd->callback == NULL)
   {
-    ESP_LOGE(TAG, "Parametros invalidos");
+    ESP_LOGE(TAG, "Invalid parameters");
     return ESP_ERR_INVALID_ARG;
   }
 
   if (s_cmd_count >= CLI_MAX_COMMANDS)
   {
-    ESP_LOGE(TAG, "Limite de comandos atingido (%d)", CLI_MAX_COMMANDS);
+    ESP_LOGE(TAG, "Command limit reached (%d)", CLI_MAX_COMMANDS);
     return ESP_ERR_NO_MEM;
   }
 
-  /* Se nao tem argumentos, usa registro simples */
+  /* If no arguments, use simple registration */
   if (cmd->arg_count == 0)
   {
     const esp_console_cmd_t esp_cmd = {
@@ -625,7 +632,7 @@ esp_err_t cli_register_command(const cli_command_t *cmd)
   }
 
   s_cmd_count++;
-  ESP_LOGI(TAG, "Comando '%s' registrado com %d argumentos", cmd->name, cmd->arg_count);
+  ESP_LOGI(TAG, "Command '%s' registered with %d arguments", cmd->name, cmd->arg_count);
 
   return ESP_OK;
 }
@@ -647,7 +654,7 @@ esp_err_t cli_register_simple_command(const char *name, const char *description,
   esp_err_t ret = esp_console_cmd_register(&cmd);
   if (ret == ESP_OK)
   {
-    ESP_LOGI(TAG, "Comando simples '%s' registrado", name);
+    ESP_LOGI(TAG, "Simple command '%s' registered", name);
   }
 
   return ret;
@@ -665,7 +672,7 @@ esp_err_t cli_register_commands(const cli_command_t *commands, size_t count)
     esp_err_t ret = cli_register_command(&commands[i]);
     if (ret != ESP_OK)
     {
-      ESP_LOGE(TAG, "Falha ao registrar comando %zu: %s", i, esp_err_to_name(ret));
+      ESP_LOGE(TAG, "Failed to register command %zu: %s", i, esp_err_to_name(ret));
       return ret;
     }
   }

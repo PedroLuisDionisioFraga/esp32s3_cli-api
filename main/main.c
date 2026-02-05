@@ -12,7 +12,7 @@
 #include "sdkconfig.h"
 #include "soc/soc_caps.h"
 
-/* Componentes de comandos */
+/* Component commands */
 #include "cmd_nvs.h"
 #include "cmd_system.h"
 #include "cmd_wifi.h"
@@ -29,39 +29,39 @@
 static const char *TAG = "example";
 
 /* ========================================================================== */
-/*                    EXEMPLOS DE COMANDOS USANDO CLI-API                     */
+/*                    EXAMPLES OF COMMANDS USING CLI-API                      */
 /* ========================================================================== */
 
 /**
- * @brief Exemplo 1: Comando simples sem argumentos
+ * @brief Example 1: Simple command without arguments
  */
 static int cmd_hello(int argc, char **argv)
 {
-  printf("Hello World! Bem-vindo ao console ESP32!\n");
+  printf("Hello World! Welcome to ESP32 console!\n");
   return 0;
 }
 
 /**
- * @brief Exemplo 2: Comando com argumentos usando cli_context_t
+ * @brief Example 2: Command with arguments using cli_context_t
  *
- * Uso: echo --msg "sua mensagem" [-n repeticoes] [-u]
+ * Usage: echo --msg "your message" [-n repetitions] [-u]
  */
 static int cmd_echo(cli_context_t *ctx)
 {
-  /* Argumento 0: mensagem (string obrigatória) */
+  /* Argument 0: message (required string) */
   const char *msg = ctx->args[0].str_value;
 
-  /* Argumento 1: número de repetições (int opcional, default=1) */
+  /* Argument 1: number of repetitions (optional int, default=1) */
   int repeat = (ctx->args[1].count > 0) ? ctx->args[1].int_value : 1;
 
-  /* Argumento 2: uppercase flag (opcional) */
+  /* Argument 2: uppercase flag (optional) */
   bool uppercase = ctx->args[2].flag_value;
 
   for (int i = 0; i < repeat; i++)
   {
     if (uppercase)
     {
-      /* Imprime em maiúsculas */
+      /* Print in uppercase */
       for (const char *p = msg; *p; p++)
       {
         printf("%c", (*p >= 'a' && *p <= 'z') ? (*p - 32) : *p);
@@ -79,27 +79,27 @@ static int cmd_echo(cli_context_t *ctx)
 
 static const cli_command_t echo_cmd = {
   .name = "echo",
-  .description = "Repete uma mensagem N vezes",
+  .description = "Repeats a message N times",
   .hint = NULL,
   .callback = cmd_echo,
   .args =
     {
       {.short_opt = "m",
        .long_opt = "msg",
-       .datatype = "<texto>",
-       .description = "Mensagem a ser exibida",
+       .datatype = "<text>",
+       .description = "Message to be displayed",
        .type = CLI_ARG_TYPE_STRING,
        .required = true},
       {.short_opt = "n",
        .long_opt = "repeat",
        .datatype = "<N>",
-       .description = "Número de repetições (default: 1)",
+       .description = "Number of repetitions (default: 1)",
        .type = CLI_ARG_TYPE_INT,
        .required = false},
       {.short_opt = "u",
        .long_opt = "uppercase",
        .datatype = NULL,
-       .description = "Converte para maiúsculas",
+       .description = "Converts to uppercase",
        .type = CLI_ARG_TYPE_FLAG,
        .required = false},
     },
@@ -107,9 +107,9 @@ static const cli_command_t echo_cmd = {
 };
 
 /**
- * @brief Exemplo 3: Comando de cálculo matemático
+ * @brief Example 3: Math calculation command
  *
- * Uso: calc -a <num1> -b <num2> [-v]
+ * Usage: calc -a <num1> -b <num2> [-v]
  */
 static int cmd_calc(cli_context_t *ctx)
 {
@@ -119,22 +119,22 @@ static int cmd_calc(cli_context_t *ctx)
 
   if (verbose)
   {
-    printf("Calculando operações com A=%d e B=%d\n", a, b);
-    printf("  Soma:         %d + %d = %d\n", a, b, a + b);
-    printf("  Subtração:    %d - %d = %d\n", a, b, a - b);
-    printf("  Multiplicação:%d * %d = %d\n", a, b, a * b);
+    printf("Calculating operations with A=%d and B=%d\n", a, b);
+    printf("  Addition:        %d + %d = %d\n", a, b, a + b);
+    printf("  Subtraction:     %d - %d = %d\n", a, b, a - b);
+    printf("  Multiplication:  %d * %d = %d\n", a, b, a * b);
     if (b != 0)
     {
-      printf("  Divisão:      %d / %d = %d\n", a, b, a / b);
+      printf("  Division:        %d / %d = %d\n", a, b, a / b);
     }
     else
     {
-      printf("  Divisão:      indefinida (B=0)\n");
+      printf("  Division:        undefined (B=0)\n");
     }
   }
   else
   {
-    printf("Soma: %d\n", a + b);
+    printf("Sum: %d\n", a + b);
   }
 
   return 0;
@@ -142,7 +142,7 @@ static int cmd_calc(cli_context_t *ctx)
 
 static const cli_command_t calc_cmd = {
   .name = "calc",
-  .description = "Calculadora simples (soma, sub, mult, div)",
+  .description = "Simple calculator (addition, subtraction, multiplication, division)",
   .hint = NULL,
   .callback = cmd_calc,
   .args =
@@ -150,19 +150,19 @@ static const cli_command_t calc_cmd = {
       {.short_opt = "a",
        .long_opt = NULL,
        .datatype = "<num>",
-       .description = "Primeiro número",
+       .description = "First number",
        .type = CLI_ARG_TYPE_INT,
        .required = true},
       {.short_opt = "b",
        .long_opt = NULL,
        .datatype = "<num>",
-       .description = "Segundo número",
+       .description = "Second number",
        .type = CLI_ARG_TYPE_INT,
        .required = true},
       {.short_opt = "v",
        .long_opt = "verbose",
        .datatype = NULL,
-       .description = "Mostra todas as operações",
+       .description = "Shows all operations",
        .type = CLI_ARG_TYPE_FLAG,
        .required = false},
     },
@@ -170,24 +170,24 @@ static const cli_command_t calc_cmd = {
 };
 
 /**
- * @brief Exemplo 4: Comando complexo de configuração de GPIO
+ * @brief Example 4: Complex GPIO configuration command
  *
- * Demonstra validação de entrada, múltiplos argumentos opcionais,
- * tratamento de erros e interação com hardware.
+ * Demonstrates input validation, multiple optional arguments,
+ * error handling and hardware interaction.
  *
- * Uso: gpio --pin <0-48> --mode <in|out|od> [--pull <up|down|none>] [--level
+ * Usage: gpio --pin <0-48> --mode <in|out|od> [--pull <up|down|none>] [--level
  * <0|1>] [-i] [-s]
  *
- * Exemplos:
- *   gpio --pin 2 --mode out --level 1         # Configura GPIO2 como saída em
- * HIGH gpio --pin 4 --mode in --pull up -i       # Configura GPIO4 como entrada
- * com pull-up e mostra info gpio --pin 5 --mode od -s                 #
- * Open-drain, salva no NVS
+ * Examples:
+ *   gpio --pin 2 --mode out --level 1         # Configure GPIO2 as output at HIGH
+ *   gpio --pin 4 --mode in --pull up -i       # Configure GPIO4 as input with
+ *                                               pull-up and show info
+ *   gpio --pin 5 --mode od -s                 # Open-drain, save to NVS
  */
 
 #include "driver/gpio.h"
 
-/* Estrutura para armazenar configuração atual */
+/* Structure to store current GPIO configuration */
 typedef struct
 {
   int pin;
@@ -201,33 +201,33 @@ static gpio_config_state_t s_gpio_states[GPIO_NUM_MAX] = {0};
 
 static int cmd_gpio(cli_context_t *ctx)
 {
-  /* Extrai argumentos */
+  /* Extract arguments */
   int pin = ctx->args[0].int_value;
   const char *mode_str = ctx->args[1].str_value;
   const char *pull_str = (ctx->args[2].count > 0) ? ctx->args[2].str_value : "none";
   bool level_specified = (ctx->args[3].count > 0);
-  int level = level_specified ? ctx->args[3].int_value : -1; /* -1 = não especificado */
+  int level = level_specified ? ctx->args[3].int_value : -1; /* -1 = not specified */
   bool show_info = ctx->args[4].flag_value;
   bool save_nvs = ctx->args[5].flag_value;
 
-  /* ========== Validação do PIN ========== */
+  /* ========== PIN Validation ========== */
   if (pin < 0 || pin >= GPIO_NUM_MAX)
   {
-    printf("ERRO: GPIO %d inválido. Use 0-%d\n", pin, GPIO_NUM_MAX - 1);
+    printf("ERROR: GPIO %d invalid. Use 0-%d\n", pin, GPIO_NUM_MAX - 1);
     return 1;
   }
 
-  /* Verifica pinos reservados (ESP32-S3 específico) */
+  /* Check reserved pins (ESP32-S3 specific) */
   const int reserved_pins[] = {19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};
   for (size_t i = 0; i < sizeof(reserved_pins) / sizeof(reserved_pins[0]); i++)
   {
     if (pin == reserved_pins[i])
     {
-      printf("AVISO: GPIO %d pode ser reservado para flash/PSRAM\n", pin);
+      printf("WARNING: GPIO %d may be reserved for flash/PSRAM\n", pin);
     }
   }
 
-  /* ========== Parse do modo ========== */
+  /* ========== Parse mode ========== */
   gpio_mode_t gpio_mode;
   if (strcmp(mode_str, "in") == 0 || strcmp(mode_str, "input") == 0)
   {
@@ -251,11 +251,11 @@ static int cmd_gpio(cli_context_t *ctx)
   }
   else
   {
-    printf("ERRO: Modo '%s' inválido. Use: in, out, od, inout, inout_od\n", mode_str);
+    printf("ERROR: Mode '%s' invalid. Use: in, out, od, inout, inout_od\n", mode_str);
     return 1;
   }
 
-  /* ========== Parse do pull ========== */
+  /* ========== Parse pull ========== */
   gpio_pull_mode_t pull_mode;
   bool enable_pullup = false;
   bool enable_pulldown = false;
@@ -282,37 +282,37 @@ static int cmd_gpio(cli_context_t *ctx)
   }
   else
   {
-    printf("ERRO: Pull '%s' invalido. Use: up, down, both, none\n", pull_str);
+    printf("ERROR: Pull '%s' invalid. Use: up, down, both, none\n", pull_str);
     return 1;
   }
 
-  /* ========== Determina o nivel a usar ========== */
-  /* Se o usuario nao especificou -l, mantem o nivel salvo internamente */
-  /* NOTA: gpio_get_level() retorna sempre 0 se o pino for somente OUTPUT! */
+  /* ========== Determine level to use ========== */
+  /* If user hasn't specified -l, keep the internally saved level */
+  /* NOTE: gpio_get_level() always returns 0 if pin is OUTPUT only! */
   if (!level_specified)
   {
     if (s_gpio_states[pin].configured)
     {
-      /* GPIO ja configurado: usa o nivel salvo internamente */
+      /* GPIO already configured: use internally saved level */
       level = s_gpio_states[pin].level;
     }
     else
     {
-      /* Primeira configuracao: usa 0 como padrao */
+      /* First configuration: use 0 as default */
       level = 0;
     }
   }
 
-  /* ========== Validação do nível ========== */
+  /* ========== Level Validation ========== */
   if (level != 0 && level != 1)
   {
-    printf("ERRO: Nível deve ser 0 ou 1, recebido: %d\n", level);
+    printf("ERROR: Level must be 0 or 1, received: %d\n", level);
     return 1;
   }
 
-  /* ========== Configuração do GPIO ========== */
+  /* ========== GPIO Configuration ========== */
   printf("\n+-----------------------------------------+\n");
-  printf("|       Configurando GPIO %-2d              |\n", pin);
+  printf("|       Configuring GPIO %-2d              |\n", pin);
   printf("+-----------------------------------------+\n");
 
   gpio_config_t io_conf = {
@@ -326,44 +326,44 @@ static int cmd_gpio(cli_context_t *ctx)
   esp_err_t ret = gpio_config(&io_conf);
   if (ret != ESP_OK)
   {
-    printf("|  ERRO: %-30s |\n", esp_err_to_name(ret));
+    printf("|  ERROR: %-30s |\n", esp_err_to_name(ret));
     printf("+-----------------------------------------+\n");
     return 1;
   }
 
-  /* Define nível se for saída */
+  /* Set level if output */
   if (gpio_mode == GPIO_MODE_OUTPUT || gpio_mode == GPIO_MODE_OUTPUT_OD || gpio_mode == GPIO_MODE_INPUT_OUTPUT ||
       gpio_mode == GPIO_MODE_INPUT_OUTPUT_OD)
   {
     gpio_set_level(pin, level);
   }
 
-  /* Salva estado */
+  /* Save state */
   s_gpio_states[pin].pin = pin;
   s_gpio_states[pin].mode = gpio_mode;
   s_gpio_states[pin].pull = pull_mode;
   s_gpio_states[pin].level = level;
   s_gpio_states[pin].configured = true;
 
-  /* Exibe resultado */
+  /* Display result */
   const char *mode_names[] = {"DISABLE", "INPUT", "OUTPUT", "OUTPUT_OD", "INPUT_OUTPUT", "", "INPUT_OUTPUT_OD"};
   const char *pull_names[] = {"PULLUP", "PULLDOWN", "UP+DOWN", "FLOATING"};
 
-  printf("|  Modo:      %-27s |\n", mode_names[gpio_mode]);
+  printf("|  Mode:      %-27s |\n", mode_names[gpio_mode]);
   printf("|  Pull:      %-27s |\n", pull_names[pull_mode]);
 
   if (gpio_mode != GPIO_MODE_INPUT)
   {
-    printf("|  Nivel:     %-27s |\n", level ? "HIGH (1)" : "LOW (0)");
+    printf("|  Level:     %-27s |\n", level ? "HIGH (1)" : "LOW (0)");
   }
 
-  printf("|  Status:    %-27s |\n", "OK - Configurado");
+  printf("|  Status:    %-27s |\n", "OK - Configured");
 
-  /* ========== Salva no NVS (simulado) ========== */
+  /* ========== Save to NVS (simulated) ========== */
   if (save_nvs)
   {
     printf("+-----------------------------------------+\n");
-    printf("|  NVS: Configuracao salva!               |\n");
+    printf("|  NVS: Configuration saved!              |\n");
     ESP_LOGI(TAG, "GPIO %d config saved to NVS (mode=%d, pull=%d, level=%d)", pin, gpio_mode, pull_mode, level);
   }
 
@@ -374,7 +374,7 @@ static int cmd_gpio(cli_context_t *ctx)
 
 static const cli_command_t gpio_cmd = {
   .name = "gpio",
-  .description = "Configura um GPIO (modo, pull, nível)",
+  .description = "Configure a GPIO (mode, pull, level)",
   .hint = NULL,
   .callback = cmd_gpio,
   .args =
@@ -383,7 +383,7 @@ static const cli_command_t gpio_cmd = {
         .short_opt = "p",
         .long_opt = "pin",
         .datatype = "<0-48>",
-        .description = "Número do GPIO",
+        .description = "GPIO number",
         .type = CLI_ARG_TYPE_INT,
         .required = true,
       },
@@ -391,7 +391,7 @@ static const cli_command_t gpio_cmd = {
         .short_opt = "m",
         .long_opt = "mode",
         .datatype = "<in|out|od>",
-        .description = "Modo: in, out, od, inout, inout_od",
+        .description = "Mode: in, out, od, inout, inout_od",
         .type = CLI_ARG_TYPE_STRING,
         .required = true,
       },
@@ -407,7 +407,7 @@ static const cli_command_t gpio_cmd = {
         .short_opt = "l",
         .long_opt = "level",
         .datatype = "<0|1>",
-        .description = "Nível inicial (para saída)",
+        .description = "Initial level (for output)",
         .type = CLI_ARG_TYPE_INT,
         .required = false,
       },
@@ -415,7 +415,7 @@ static const cli_command_t gpio_cmd = {
         .short_opt = "i",
         .long_opt = "info",
         .datatype = NULL,
-        .description = "Mostra informações extras do GPIO",
+        .description = "Show extra GPIO information",
         .type = CLI_ARG_TYPE_FLAG,
         .required = false,
       },
@@ -423,7 +423,7 @@ static const cli_command_t gpio_cmd = {
         .short_opt = "s",
         .long_opt = "save",
         .datatype = NULL,
-        .description = "Salva configuração no NVS",
+        .description = "Save configuration to NVS",
         .type = CLI_ARG_TYPE_FLAG,
         .required = false,
       },
@@ -432,19 +432,19 @@ static const cli_command_t gpio_cmd = {
 };
 
 /**
- * @brief Registra todos os comandos de exemplo da CLI-API
+ * @brief Register all CLI-API example commands
  */
 static void register_cli_api_examples(void)
 {
-  /* Comando simples */
-  cli_register_simple_command("hello", "Imprime Hello World", cmd_hello);
+  /* Simple command */
+  cli_register_simple_command("hello", "Prints Hello World", cmd_hello);
 
-  /* Comandos com argumentos */
+  /* Commands with arguments */
   cli_register_command(&echo_cmd);
   cli_register_command(&calc_cmd);
   cli_register_command(&gpio_cmd);
 
-  ESP_LOGI(TAG, "Comandos de exemplo CLI-API registrados: hello, echo, calc, gpio");
+  ESP_LOGI(TAG, "CLI-API example commands registered: hello, echo, calc, gpio");
 }
 
 /* ========================================================================== */
@@ -453,7 +453,7 @@ static void register_cli_api_examples(void)
 
 void app_main(void)
 {
-  /* Configura e inicializa a CLI */
+  /* Configure and initialize the CLI */
   cli_config_t cli_cfg = {
     .prompt = CONFIG_IDF_TARGET "> ",
     .banner = "\n"
@@ -463,18 +463,18 @@ void app_main(void)
               "Press TAB to auto-complete.\n"
               "\n"
               "CLI-API Examples:\n"
-              "  hello              - Imprime Hello World\n"
-              "  echo -m <msg>      - Repete mensagem (use -n N, -u)\n"
-              "  calc -a N -b M     - Calculadora (use -v para verbose)\n"
-              "  gpio -p N -m MODE  - Configura GPIO (use --pull, -l, -i, -s)\n"
+              "  hello              - Prints Hello World\n"
+              "  echo -m <msg>      - Repeats message (use -n N, -u)\n"
+              "  calc -a N -b M     - Calculator (use -v for verbose)\n"
+              "  gpio -p N -m MODE  - Configure GPIO (use --pull, -l, -i, -s)\n"
               "===========================",
     .register_help = true,
-    .store_history = true, /* CLI-API gerencia a partição FATFS para histórico */
+    .store_history = true, /* CLI-API manages FATFS partition for history */
   };
 
   ESP_ERROR_CHECK(cli_init(&cli_cfg));
 
-  /* Registra comandos do sistema */
+  /* Register system commands */
   register_system_common();
 #if SOC_LIGHT_SLEEP_SUPPORTED
   register_system_light_sleep();
@@ -487,12 +487,12 @@ void app_main(void)
 #endif
   register_nvs();
 
-  /* Registra comandos de exemplo da CLI-API */
+  /* Register CLI-API example commands */
   register_cli_api_examples();
 
-  /* Inicia o loop do console (bloqueia aqui) */
+  /* Start the console loop (blocks here) */
   cli_run();
 
-  /* Finaliza */
+  /* Finalize */
   cli_deinit();
 }
