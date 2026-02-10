@@ -113,9 +113,8 @@ static esp_err_t cli_init_nvs(void)
     err = nvs_flash_init();
   }
   if (err == ESP_OK)
-  {
     ESP_LOGI(TAG, "NVS initialized");
-  }
+
   return err;
 }
 
@@ -128,7 +127,7 @@ static esp_err_t cli_init_filesystem(void)
                                                    .format_if_mount_failed = true,
                                                    .allocation_unit_size = CONFIG_WL_SECTOR_SIZE};
 
-  esp_err_t err = esp_vfs_fat_spiflash_mount_rw_wl(CLI_MOUNT_PATH, "storage", &mount_config, &s_wl_handle);
+  esp_err_t err = esp_vfs_fat_spiflash_mount_rw_wl(CLI_MOUNT_PATH, "storage", &mount_config, &s_cli.wl_handle);
   if (err != ESP_OK)
   {
     ESP_LOGE(TAG, "Failed to mount FATFS (%s). History disabled.", esp_err_to_name(err));
@@ -144,10 +143,10 @@ static esp_err_t cli_init_filesystem(void)
  */
 static void cli_deinit_filesystem(void)
 {
-  if (s_wl_handle != WL_INVALID_HANDLE)
+  if (s_cli.wl_handle != WL_INVALID_HANDLE)
   {
-    esp_vfs_fat_spiflash_unmount_rw_wl(CLI_MOUNT_PATH, s_wl_handle);
-    s_wl_handle = WL_INVALID_HANDLE;
+    esp_vfs_fat_spiflash_unmount_rw_wl(CLI_MOUNT_PATH, s_cli.wl_handle);
+    s_cli.wl_handle = WL_INVALID_HANDLE;
     ESP_LOGI(TAG, "FATFS unmounted");
   }
 }
@@ -238,7 +237,7 @@ static void cli_init_linenoise(void)
   linenoiseAllowEmpty(false);
 
   /* Load history if configured */
-  if (s_store_history)
+  if (s_cli.store_history)
   {
     linenoiseHistoryLoad(CLI_HISTORY_PATH);
   }
@@ -270,37 +269,35 @@ static void cli_setup_prompt(const char *prompt_str)
 #if CONFIG_LOG_COLORS
   if (!linenoiseIsDumbMode())
   {
-    snprintf(s_prompt, CLI_PROMPT_MAX_LEN - 1, LOG_COLOR_I "%s" LOG_RESET_COLOR, prompt_temp);
+    snprintf(s_cli.prompt, CLI_PROMPT_MAX_LEN - 1, LOG_COLOR_I "%s" LOG_RESET_COLOR, prompt_temp);
   }
   else
   {
-    snprintf(s_prompt, CLI_PROMPT_MAX_LEN - 1, "%s", prompt_temp);
+    snprintf(s_cli.prompt, CLI_PROMPT_MAX_LEN - 1, "%s", prompt_temp);
   }
 #else
-  snprintf(s_prompt, CLI_PROMPT_MAX_LEN - 1, "%s", prompt_temp);
+  snprintf(s_cli.prompt, CLI_PROMPT_MAX_LEN - 1, "%s", prompt_temp);
 #endif
 }
 
 /* ========================================================================== */
-/*                          FUNCOES PUBLICAS                                  */
+/*                          Public functions                                  */
 /* ========================================================================== */
 
 esp_err_t cli_init(const cli_config_t *config)
 {
-  if (s_initialized)
+  if (s_cli.initialized)
   {
-    ESP_LOGW(TAG, "CLI ja inicializado");
+    ESP_LOGW(TAG, "CLI already initialized");
     return ESP_OK;
   }
 
-  /* Usa configuracao padrao se nao fornecida */
+  /* Use default configuration if none provided */
   cli_config_t default_config = CLI_CONFIG_DEFAULT();
   if (config == NULL)
-  {
     config = &default_config;
-  }
 
-  /* Inicializa NVS */
+  /* Initialize NVS */
   esp_err_t err = cli_init_nvs();
   if (err != ESP_OK)
   {
@@ -308,59 +305,43 @@ esp_err_t cli_init(const cli_config_t *config)
     return err;
   }
 
-  /* Inicializa filesystem se historico habilitado */
+  /* Initialize filesystem if history enabled */
   if (config->store_history)
   {
     esp_err_t err = cli_init_filesystem();
     if (err != ESP_OK)
     {
       ESP_LOGW(TAG, "Failed to mount filesystem, history disabled");
-      s_store_history = false;
+      s_cli.store_history = false;
     }
     else
-    {
-      s_store_history = true;
-    }
+      s_cli.store_history = true;
   }
   else
-  {
-    s_store_history = false;
-  }
+    s_cli.store_history = false;
 
-  /* Initialize peripheral and linenoise */
   cli_init_peripheral();
   cli_init_linenoise();
 
-  /* Configure prompt */
   cli_setup_prompt(config->prompt);
 
-  /* Register help command if requested */
   if (config->register_help)
-  {
     esp_console_register_help_command();
-  }
 
-  /* Display banner */
   if (config->banner != NULL)
-  {
     printf("\n%s\n", config->banner);
-  }
   else
-  {
     printf("\n"
            "ESP32 CLI Console\n"
            "Type 'help' to get the list of commands.\n"
            "Use UP/DOWN arrows to navigate through command history.\n"
            "Press TAB when typing command name to auto-complete.\n\n");
-  }
 
   if (linenoiseIsDumbMode())
-  {
     printf("Terminal does not support escape sequences.\n"
            "Line editing and history features are disabled.\n\n");
-  }
 
-  s_initialized = true;
+  s_cli.initialized = true;
   ESP_LOGI(TAG, "CLI successfully initialized");
 
   return ESP_OK;
@@ -368,7 +349,7 @@ esp_err_t cli_init(const cli_config_t *config)
 
 esp_err_t cli_run(void)
 {
-  if (!s_initialized)
+  if (!s_cli.initialized)
   {
     ESP_LOGE(TAG, "CLI not initialized. Call cli_init() first.");
     return ESP_ERR_INVALID_STATE;
@@ -377,7 +358,7 @@ esp_err_t cli_run(void)
   while (true)
   {
     /* Read line from user */
-    char *line = linenoise(s_prompt);
+    char *line = linenoise(s_cli.prompt);
 
     if (line == NULL)
     {
@@ -388,14 +369,11 @@ esp_err_t cli_run(void)
 #endif
     }
 
-    /* Add to history if not empty */
     if (strlen(line) > 0)
     {
       linenoiseHistoryAdd(line);
-      if (s_store_history)
-      {
+      if (s_cli.store_history)
         linenoiseHistorySave(CLI_HISTORY_PATH);
-      }
     }
 
     /* Execute the command */
@@ -403,23 +381,14 @@ esp_err_t cli_run(void)
     esp_err_t err = esp_console_run(line, &ret);
 
     if (err == ESP_ERR_NOT_FOUND)
-    {
       printf("Command not recognized\n");
-    }
-    else if (err == ESP_ERR_INVALID_ARG)
-    {
-      /* Empty command, ignore */
-    }
     else if (err == ESP_OK && ret != ESP_OK)
-    {
       printf("Command returned error: 0x%x (%s)\n", ret, esp_err_to_name(ret));
-    }
     else if (err != ESP_OK)
-    {
       printf("Internal error: %s\n", esp_err_to_name(err));
-    }
+    // Empty command, ignore
+    // if (err == ESP_ERR_INVALID_ARG)
 
-    /* Free memory allocated by linenoise */
     linenoiseFree(line);
   }
 
@@ -429,26 +398,25 @@ esp_err_t cli_run(void)
 
 void cli_deinit(void)
 {
-  if (s_initialized)
+  if (s_cli.initialized)
   {
     esp_console_deinit();
 
-    /* Unmount filesystem if it was mounted */
-    if (s_store_history)
+    if (s_cli.store_history)
     {
       cli_deinit_filesystem();
-      s_store_history = false;
+      s_cli.store_history = false;
     }
 
-    s_initialized = false;
-    s_cmd_count = 0;
+    s_cli.initialized = false;
+    s_cli.cmd_count = 0;
     ESP_LOGI(TAG, "CLI finalized");
   }
 }
 
 const char *cli_get_prompt(void)
 {
-  return s_prompt;
+  return s_cli.prompt;
 }
 
 /* ========================================================================== */
@@ -456,17 +424,21 @@ const char *cli_get_prompt(void)
 /* ========================================================================== */
 
 /**
- * @brief Wrapper callback that parses arguments and calls user callback
+ * @brief Wrapper function that is called by esp_console when a command is executed. It looks up the registered command,
+ * parses arguments using argtable3, and calls the user-defined callback with a cli_context_t structure.
+ *
+ * @param argc Number of arguments
+ * @param argv Array of argument strings (argv[0] is the command name)
+ * @return int
  */
 static int cli_command_wrapper(int argc, char **argv)
 {
-  /* Find registered command by name (argv[0]) */
   cli_registered_cmd_t *reg_cmd = NULL;
-  for (int i = 0; i < s_cmd_count; i++)
+  for (int i = 0; i < s_cli.cmd_count; i++)
   {
-    if (strcmp(s_registered_cmds[i].cmd_def->name, argv[0]) == 0)
+    if (strcmp(s_cli.cmds[i].cmd_def->name, argv[0]) == 0)
     {
-      reg_cmd = &s_registered_cmds[i];
+      reg_cmd = &s_cli.cmds[i];
       break;
     }
   }
@@ -479,10 +451,7 @@ static int cli_command_wrapper(int argc, char **argv)
 
   const cli_command_t *cmd = reg_cmd->cmd_def;
 
-  /* Parse arguments using argtable3 */
   int nerrors = arg_parse(argc, argv, reg_cmd->argtable);
-
-  /* If there are parsing errors, show and return */
   if (nerrors != 0)
   {
     struct arg_end *end = reg_cmd->argtable[cmd->arg_count];
@@ -490,14 +459,13 @@ static int cli_command_wrapper(int argc, char **argv)
     return 1;
   }
 
-  /* Prepara o contexto para o callback do usuario */
   cli_context_t ctx = {
     .argc = argc,
     .argv = argv,
     .arg_count = cmd->arg_count,
   };
 
-  /* Extrai valores dos argumentos parseados */
+  /* Extract parsed argument values */
   for (int i = 0; i < cmd->arg_count; i++)
   {
     void *arg = reg_cmd->argtable[i];
@@ -528,7 +496,6 @@ static int cli_command_wrapper(int argc, char **argv)
     }
   }
 
-  /* Chama o callback do usuario */
   return cmd->callback(&ctx);
 }
 
@@ -540,7 +507,7 @@ esp_err_t cli_register_command(const cli_command_t *cmd)
     return ESP_ERR_INVALID_ARG;
   }
 
-  if (s_cmd_count >= CLI_MAX_COMMANDS)
+  if (s_cli.cmd_count >= CLI_MAX_COMMANDS)
   {
     ESP_LOGE(TAG, "Command limit reached (%d)", CLI_MAX_COMMANDS);
     return ESP_ERR_NO_MEM;
@@ -556,16 +523,15 @@ esp_err_t cli_register_command(const cli_command_t *cmd)
       .func = (int (*)(int, char **))cli_command_wrapper,
     };
 
-    /* Salva referencia */
-    s_registered_cmds[s_cmd_count].cmd_def = cmd;
-    s_registered_cmds[s_cmd_count].arg_count = 0;
-    s_cmd_count++;
+    s_cli.cmds[s_cli.cmd_count].cmd_def = cmd;
+    s_cli.cmds[s_cli.cmd_count].arg_count = 0;
+    s_cli.cmd_count++;
 
     return esp_console_cmd_register(&esp_cmd);
   }
 
-  /* Aloca estruturas argtable3 para cada argumento */
-  cli_registered_cmd_t *reg_cmd = &s_registered_cmds[s_cmd_count];
+  /* Allocate argtable3 structures for each argument */
+  cli_registered_cmd_t *reg_cmd = &s_cli.cmds[s_cli.cmd_count];
   reg_cmd->cmd_def = cmd;
   reg_cmd->arg_count = cmd->arg_count;
 
@@ -576,55 +542,45 @@ esp_err_t cli_register_command(const cli_command_t *cmd)
     switch (arg->type)
     {
       case CLI_ARG_TYPE_INT:
+      {
         if (arg->required)
-        {
           reg_cmd->argtable[i] = arg_int1(arg->short_opt, arg->long_opt, arg->datatype, arg->description);
-        }
         else
-        {
           reg_cmd->argtable[i] = arg_int0(arg->short_opt, arg->long_opt, arg->datatype, arg->description);
-        }
         break;
-
+      }
       case CLI_ARG_TYPE_STRING:
+      {
         if (arg->required)
-        {
           reg_cmd->argtable[i] = arg_str1(arg->short_opt, arg->long_opt, arg->datatype, arg->description);
-        }
         else
-        {
           reg_cmd->argtable[i] = arg_str0(arg->short_opt, arg->long_opt, arg->datatype, arg->description);
-        }
         break;
-
+      }
       case CLI_ARG_TYPE_FLAG:
+      {
         if (arg->required)
-        {
           reg_cmd->argtable[i] = arg_lit1(arg->short_opt, arg->long_opt, arg->description);
-        }
         else
-        {
           reg_cmd->argtable[i] = arg_lit0(arg->short_opt, arg->long_opt, arg->description);
-        }
         break;
-
+      }
       default:
+      {
         ESP_LOGE(TAG, "Invalid argument type: %d", arg->type);
         return ESP_ERR_INVALID_ARG;
+      }
     }
 
     if (reg_cmd->argtable[i] == NULL)
     {
       ESP_LOGE(TAG, "Failed to allocate argument %d", i);
-      for (int j = 0; j < i; j++)
-      {
-        free(reg_cmd->argtable[j]);
-      }
+      for (int j = 0; j < i; j++) free(reg_cmd->argtable[j]);
+
       return ESP_ERR_NO_MEM;
     }
   }
 
-  /* Add arg_end at the end */
   reg_cmd->argtable[cmd->arg_count] = arg_end(cmd->arg_count + 1);
 
   /* Register command in esp_console */
@@ -644,7 +600,7 @@ esp_err_t cli_register_command(const cli_command_t *cmd)
     return ret;
   }
 
-  s_cmd_count++;
+  s_cli.cmd_count++;
   ESP_LOGI(TAG, "Command '%s' registered with %d arguments", cmd->name, cmd->arg_count);
 
   return ESP_OK;
@@ -653,9 +609,7 @@ esp_err_t cli_register_command(const cli_command_t *cmd)
 esp_err_t cli_register_simple_command(const char *name, const char *description, int (*callback)(int argc, char **argv))
 {
   if (name == NULL || callback == NULL)
-  {
     return ESP_ERR_INVALID_ARG;
-  }
 
   const esp_console_cmd_t cmd = {
     .command = name,
@@ -666,9 +620,7 @@ esp_err_t cli_register_simple_command(const char *name, const char *description,
 
   esp_err_t ret = esp_console_cmd_register(&cmd);
   if (ret == ESP_OK)
-  {
     ESP_LOGI(TAG, "Simple command '%s' registered", name);
-  }
 
   return ret;
 }
@@ -676,9 +628,7 @@ esp_err_t cli_register_simple_command(const char *name, const char *description,
 esp_err_t cli_register_commands(const cli_command_t *commands, size_t count)
 {
   if (commands == NULL || count == 0)
-  {
     return ESP_ERR_INVALID_ARG;
-  }
 
   for (size_t i = 0; i < count; i++)
   {
