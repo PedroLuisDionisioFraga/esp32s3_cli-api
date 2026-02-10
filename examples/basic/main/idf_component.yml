@@ -1,0 +1,3 @@
+dependencies:
+  cli-api:
+    path: ../../../components/cli-api
