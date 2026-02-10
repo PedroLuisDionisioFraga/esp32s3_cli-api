@@ -52,23 +52,12 @@ static const char *TAG = "cli-api";
 #define CLI_HISTORY_PATH CLI_MOUNT_PATH "/history.txt"
 
 /* ========================================================================== */
-/*                           INTERNAL VARIABLES                               */
+/*                           INTERNAL TYPES                                   */
 /* ========================================================================== */
 
-/** @brief Console prompt */
-static char s_prompt[CLI_PROMPT_MAX_LEN] = "esp> ";
-
-/** @brief Flag indicating if console was initialized */
-static bool s_initialized = false;
-
-/** @brief Flag indicating if history is enabled */
-static bool s_store_history = false;
-
-/** @brief Wear levelling handle (for FATFS) */
-static wl_handle_t s_wl_handle = WL_INVALID_HANDLE;
-
 /**
- * @brief Internal structure to store registered command data
+ * @brief Parsed argument context passed to command callbacks, like a receipt with all ingredients ready
+ *
  */
 typedef struct
 {
@@ -77,11 +66,35 @@ typedef struct
   uint8_t arg_count;                /**< Number of arguments */
 } cli_registered_cmd_t;
 
-/** @brief Array of registered commands */
-static cli_registered_cmd_t s_registered_cmds[CLI_MAX_COMMANDS];
+/**
+ * @brief Internal CLI state
+ *
+ */
+typedef struct
+{
+  char prompt[CLI_PROMPT_MAX_LEN];             /**< Console prompt string */
+  bool initialized;                            /**< true if console was initialized */
+  bool store_history;                          /**< true if history persistence is enabled */
+  wl_handle_t wl_handle;                       /**< Wear-levelling handle for FATFS */
+  cli_registered_cmd_t cmds[CLI_MAX_COMMANDS]; /**< Registered commands */
+  uint8_t cmd_count;                           /**< Number of registered commands */
+} cli_state_t;
 
-/** @brief Counter of registered commands */
-static uint8_t s_cmd_count = 0;
+/* ========================================================================== */
+/*                           INTERNAL VARIABLES                               */
+/* ========================================================================== */
+
+/**
+ * @brief Global CLI state
+ *
+ */
+static cli_state_t s_cli = {
+  .prompt = "esp32-cli> ",
+  .initialized = false,
+  .store_history = false,
+  .wl_handle = WL_INVALID_HANDLE,
+  .cmd_count = 0,
+};
 
 /* ========================================================================== */
 /*                         NVS AND FATFS INITIALIZATION                       */

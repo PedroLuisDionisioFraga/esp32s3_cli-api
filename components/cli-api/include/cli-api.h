@@ -40,36 +40,7 @@
 /**
  * @brief Maximum prompt size
  */
-#define CLI_PROMPT_MAX_LEN 32
-
-/**
- * @brief Command history size
- */
-#define CLI_HISTORY_SIZE 100
-
-/* ========================================================================== */
-/*                              CONFIGURATION                                 */
-/* ========================================================================== */
-
-/**
- * @brief Maximum number of arguments per command
- */
-#define CLI_MAX_ARGS 8
-
-/**
- * @brief Maximum number of registered commands
- */
-#define CLI_MAX_COMMANDS 32
-
-/**
- * @brief Maximum command line length
- */
-#define CLI_MAX_CMDLINE_LENGTH 256
-
-/**
- * @brief Maximum prompt size
- */
-#define CLI_PROMPT_MAX_LEN 32
+#define CLI_PROMPT_MAX_LEN 64
 
 /**
  * @brief Command history size
@@ -134,7 +105,7 @@ typedef struct
 typedef int (*cli_callback_t)(cli_context_t *ctx);
 
 /**
- * @brief Complete CLI command descriptor
+ * @brief Complete CLI command descriptor, like a recipe
  */
 typedef struct
 {
@@ -157,7 +128,9 @@ typedef struct
   bool store_history; /**< true = save history to filesystem (requires "storage" partition) */
 } cli_config_t;
 
-/** @brief Default console configuration */
+/**
+ * @brief Macro to initialize cli_config_t with default values
+ */
 #define CLI_CONFIG_DEFAULT() \
   {                          \
     .prompt = NULL,          \
