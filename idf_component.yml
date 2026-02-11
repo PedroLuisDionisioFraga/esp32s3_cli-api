@@ -1,5 +1,5 @@
 name: "CLI API"
-version: "1.0.0"
+version: "1.0.2"
 license: "MIT"
 description: "CLI API is a component for ESP-IDF that provides a simple and efficient way to create command-line interfaces (CLI) for ESP32-based applications. It allows developers to easily define and manage CLI commands, making it easier to interact with the device and perform various tasks through a terminal interface."
 url: "https://github.com/PedroLuisDionisioFraga/esp32s3_cli-api"
