@@ -239,9 +239,7 @@ static void cli_init_linenoise(void)
 
   /* Load history if configured */
   if (s_cli.store_history)
-  {
     linenoiseHistoryLoad(CLI_HISTORY_PATH);
-  }
 
   /* Detect escape sequences support */
 #if defined(CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG)
@@ -250,9 +248,7 @@ static void cli_init_linenoise(void)
 #else
   const int probe_status = linenoiseProbe();
   if (probe_status)
-  {
     linenoiseSetDumbMode(1);
-  }
 #endif
 }
 
@@ -263,19 +259,13 @@ static void cli_setup_prompt(const char *prompt_str)
 {
   const char *prompt_temp = "esp> ";
   if (prompt_str != NULL)
-  {
     prompt_temp = prompt_str;
-  }
 
 #if CONFIG_LOG_COLORS
   if (!linenoiseIsDumbMode())
-  {
     snprintf(s_cli.prompt, CLI_PROMPT_MAX_LEN - 1, LOG_COLOR_I "%s" LOG_RESET_COLOR, prompt_temp);
-  }
   else
-  {
     snprintf(s_cli.prompt, CLI_PROMPT_MAX_LEN - 1, "%s", prompt_temp);
-  }
 #else
   snprintf(s_cli.prompt, CLI_PROMPT_MAX_LEN - 1, "%s", prompt_temp);
 #endif
