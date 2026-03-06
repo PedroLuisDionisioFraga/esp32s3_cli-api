@@ -229,6 +229,7 @@ static void cli_init_linenoise(void)
   ESP_ERROR_CHECK(esp_console_init(&console_config));
 
   /* Configure linenoise */
+  linenoiseSetDumbMode(1);   /* Required for Web Serial / dumb terminals (no ANSI/VT100) */
   linenoiseSetMultiLine(1);
   linenoiseSetCompletionCallback(&esp_console_get_completion);
   linenoiseSetHintsCallback((linenoiseHintsCallback *)&esp_console_get_hint);
