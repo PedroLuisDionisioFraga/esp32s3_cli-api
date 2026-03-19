@@ -94,4 +94,9 @@ void app_main(void)
 
   /* Finalize (only reached on exit) */
   cli_deinit();
+
+  while (1)
+  {
+    vTaskDelay(pdMS_TO_TICKS(1000));
+  }
 }
