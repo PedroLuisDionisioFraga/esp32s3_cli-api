@@ -24,7 +24,7 @@ idf.py -p PORT flash monitor
 
 ### Example Output
 
-```
+```bash
 === CLI-API Basic Example ===
 Type 'help' to get the list of commands.
 Use UP/DOWN arrows for command history.
@@ -71,7 +71,7 @@ static int cmd_hello(int argc, char **argv)
 
 ## Project Structure
 
-```
+```text
 examples/basic/
 ├── CMakeLists.txt
 ├── partitions_example.csv
