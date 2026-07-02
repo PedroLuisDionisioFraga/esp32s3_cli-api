@@ -28,17 +28,17 @@ jobs:
         shell: bash
         run: |
           version=$(python3 - <<'PY'
-from pathlib import Path
-import re
+          from pathlib import Path
+          import re
 
-content = Path('idf_component.yml').read_text(encoding='utf-8')
-match = re.search(r'^version:\s*["\']?([^"\'\s]+)["\']?\s*$', content, re.MULTILINE)
+          content = Path('idf_component.yml').read_text(encoding='utf-8')
+          match = re.search(r'^version:\s*["\']?([^"\'\s]+)["\']?\s*$', content, re.MULTILINE)
 
-if not match:
-    raise SystemExit('Unable to read version from idf_component.yml')
+          if not match:
+              raise SystemExit('Unable to read version from idf_component.yml')
 
-print(match.group(1))
-PY
+          print(match.group(1))
+          PY
           )
 
           echo "version=$version" >> "$GITHUB_OUTPUT"
