@@ -65,3 +65,10 @@ jobs:
             --target "$GITHUB_SHA" \
             --title "$tag" \
             --generate-notes
+
+      - name: Upload component to ESP Component Registry
+        uses: espressif/upload-components-ci-action@v2
+        with:
+          namespace: "pedroluisdionisiofraga"
+          components: "cli-api:."
+          api_token: ${{ secrets.IDF_COMPONENT_API_TOKEN }}
