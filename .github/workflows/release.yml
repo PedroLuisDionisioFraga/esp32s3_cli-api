@@ -44,6 +44,21 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=v$version" >> "$GITHUB_OUTPUT"
 
+      - name: Check if version is already published
+        id: registry
+        shell: bash
+        run: |
+          version="${{ steps.version.outputs.version }}"
+
+          published=$(curl -sf "https://components.espressif.com/api/components/pedroluisdionisiofraga/cli-api" \
+            | python3 -c "import json,sys; print(str(any(v['version'] == sys.argv[1] for v in json.load(sys.stdin)['versions'])).lower())" "$version") || published=false
+
+          echo "published=$published" >> "$GITHUB_OUTPUT"
+
+          if [ "$published" = "true" ]; then
+            echo "::warning::Version $version is already published to the ESP Component Registry. Bump 'version' in idf_component.yml to publish a new release; skipping upload."
+          fi
+
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -67,6 +82,7 @@ jobs:
             --generate-notes
 
       - name: Upload component to ESP Component Registry
+        if: steps.registry.outputs.published != 'true'
         uses: espressif/upload-components-ci-action@v2
         with:
           namespace: "pedroluisdionisiofraga"
