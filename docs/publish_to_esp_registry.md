@@ -37,7 +37,7 @@ targets:
 tags:
   - cli
 dependencies:
-  idf: ">=5.5.0"
+  idf: ">=6.0.0"
 ```
 
 In this repository there is an example at `examples/basic/main/idf_component.yml` referencing `pedroluisdionisiofraga/cli-api`.
@@ -88,8 +88,17 @@ gh release create v1.0.2 -t "v1.0.2" -n "Release notes"
 
 ```yaml
 dependencies:
-  <user>/<repo>: "1.0.2"
-  idf: ">=5.5.0"
+  <user>/<repo>: "*"
+  idf: ">=6.0.0"
+```
+
+`"*"` always resolves to the latest published version. Pin an explicit version
+(for example `"1.0.4"`) only when a build must stay reproducible.
+
+Or let the tooling write it for you:
+
+```bash
+idf.py add-dependency "<user>/<repo>"
 ```
 
 Example in this workspace: `examples/basic/main/idf_component.yml` references `pedroluisdionisiofraga/cli-api`.

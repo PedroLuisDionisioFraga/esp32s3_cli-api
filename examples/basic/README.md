@@ -40,7 +40,7 @@ basic> status
 +--------------------------+
 |  Free heap:  257200 B    |
 |  Min heap:   245680 B    |
-|  IDF ver:    v5.5.2      |
+|  IDF ver:    v6.0.2      |
 +--------------------------+
 
 basic> about

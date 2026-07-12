@@ -2,6 +2,29 @@
 
 A simplified, header-only like API for creating command-line interfaces (CLI) on ESP32 devices. This project wraps the complexity of ESP-IDF's console component and argtable3 library into an easy-to-use interface.
 
+## Requirements
+
+- ESP-IDF >= 6.0 (tested on v6.0.2)
+
+## Installation
+
+Add the component to your project's `main/idf_component.yml`:
+
+```yaml
+dependencies:
+  pedroluisdionisiofraga/cli-api: "*"
+  idf: ">=6.0.0"
+```
+
+`"*"` always pulls the latest version published to the ESP Component Registry.
+Pin an explicit version (for example `"1.0.4"`) only if you need reproducible builds.
+
+Equivalently, from the project root:
+
+```bash
+idf.py add-dependency "pedroluisdionisiofraga/cli-api"
+```
+
 ## Features
 
 - **Simple Command Registration**: Define commands using declarative structs instead of complex argtable3 code

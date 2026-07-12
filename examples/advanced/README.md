@@ -91,7 +91,7 @@ esp32s3> free
 
 esp32s3> version
 ESP32-S3
-IDF Version: v5.5.2
+IDF Version: v6.0.2
 Chip revision: 0
 ```
 
