@@ -1,3 +1,7 @@
 dependencies:
-  pedroluisdionisiofraga/cli-api: "1.0.3"
-  idf: ">=5.5.0"
+  pedroluisdionisiofraga/cli-api:
+    version: "*"
+    # Build against the local component (repo root) instead of the published
+    # version — this is what lets CI test the code in the PR, not the Registry.
+    override_path: "../../../"
+  idf: ">=6.0.0"
