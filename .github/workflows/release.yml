@@ -6,6 +6,10 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  NAMESPACE: "pedroluisdionisiofraga"
+  COMPONENT: "cli-api"
+
 permissions:
   contents: write
 
@@ -50,7 +54,7 @@ jobs:
         run: |
           version="${{ steps.version.outputs.version }}"
 
-          published=$(curl -sf "https://components.espressif.com/api/components/pedroluisdionisiofraga/cli-api" \
+          published=$(curl -sf "https://components.espressif.com/api/components/${NAMESPACE}/${COMPONENT}" \
             | python3 -c "import json,sys; print(str(any(v['version'] == sys.argv[1] for v in json.load(sys.stdin)['versions'])).lower())" "$version") || published=false
 
           echo "published=$published" >> "$GITHUB_OUTPUT"
@@ -85,6 +89,6 @@ jobs:
         if: steps.registry.outputs.published != 'true'
         uses: espressif/upload-components-ci-action@v2
         with:
-          namespace: "pedroluisdionisiofraga"
-          components: "cli-api:."
+          namespace: ${{ env.NAMESPACE }}
+          components: "${{ env.COMPONENT }}:."
           api_token: ${{ secrets.IDF_COMPONENT_API_TOKEN }}
