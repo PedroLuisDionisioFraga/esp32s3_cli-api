@@ -25,6 +25,7 @@
 #include "driver/uart.h"
 #include "esp_chip_info.h"
 #include "esp_console.h"
+#include "esp_idf_version.h"
 #include "esp_log.h"
 #include "esp_sleep.h"
 #include "sdkconfig.h"
@@ -174,9 +175,24 @@ static int light_sleep(int argc, char **argv)
   fflush(stdout);
   fsync(fileno(stdout));
   esp_light_sleep_start();
-  esp_sleep_wakeup_cause_t cause = esp_sleep_get_wakeup_cause();
-
   const char *cause_str;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+  /* IDF v6: esp_sleep_get_wakeup_cause() is deprecated; the replacement
+   * returns a bitmap because several sources can wake the chip at once. */
+  uint32_t causes = esp_sleep_get_wakeup_causes();
+  if (causes & (1UL << ESP_SLEEP_WAKEUP_GPIO))
+    cause_str = "GPIO";
+  else if (causes & (1UL << ESP_SLEEP_WAKEUP_UART))
+    cause_str = "UART";
+  else if (causes & (1UL << ESP_SLEEP_WAKEUP_TIMER))
+    cause_str = "timer";
+  else
+  {
+    cause_str = "unknown";
+    printf("0x%" PRIx32 "\n", causes);
+  }
+#else
+  esp_sleep_wakeup_cause_t cause = esp_sleep_get_wakeup_cause();
   switch (cause)
   {
     case ESP_SLEEP_WAKEUP_GPIO:
@@ -192,6 +208,7 @@ static int light_sleep(int argc, char **argv)
       cause_str = "unknown";
       printf("%d\n", cause);
   }
+#endif
   ESP_LOGI(TAG, "Woke up from: %s", cause_str);
   return 0;
 }
