@@ -45,29 +45,31 @@ When UART interface is used, this example can run on any commonly available Espr
 
 ### Using with USB_SERIAL_JTAG
 
-*NOTE: We recommend to disable the secondary console output on chips with USB_SERIAL_JTAG since the secondary serial is output-only and would not be very useful when using a console application. This is why the secondary console output is deactivated per default (CONFIG_ESP_CONSOLE_SECONDARY_NONE=y)*
+**NOTE**: We recommend to disable the secondary console output on chips with USB_SERIAL_JTAG since the secondary serial is output-only and would not be very useful when using a console application. This is why the secondary console output is deactivated per default (CONFIG_ESP_CONSOLE_SECONDARY_NONE=y)
 
 On chips with USB_SERIAL_JTAG peripheral, console example can be used over the USB serial port.
 
-* First, connect the USB cable to the USB_SERIAL_JTAG interface.
-* Second, run `idf.py menuconfig` and enable `CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG` option.
+- First, connect the USB cable to the USB_SERIAL_JTAG interface.
+- Second, run `idf.py menuconfig` and enable `CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG` option.
 
 For more details about connecting and configuring USB_SERIAL_JTAG (including pin numbers), see the IDF Programming Guide:
-* [ESP32-C3 USB_SERIAL_JTAG](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-guides/usb-serial-jtag-console.html)
-* [ESP32-C6 USB_SERIAL_JTAG](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c6/api-guides/usb-serial-jtag-console.html)
-* [ESP32-S3 USB_SERIAL_JTAG](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/api-guides/usb-serial-jtag-console.html)
-* [ESP32-H2 USB_SERIAL_JTAG](https://docs.espressif.com/projects/esp-idf/en/stable/esp32h2/api-guides/usb-serial-jtag-console.html)
+
+- [ESP32-C3 USB_SERIAL_JTAG](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-guides/usb-serial-jtag-console.html)
+- [ESP32-C6 USB_SERIAL_JTAG](https://docs.espressif.com/projects/esp-idf/en/stable/esp32c6/api-guides/usb-serial-jtag-console.html)
+- [ESP32-S3 USB_SERIAL_JTAG](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/api-guides/usb-serial-jtag-console.html)
+- [ESP32-H2 USB_SERIAL_JTAG](https://docs.espressif.com/projects/esp-idf/en/stable/esp32h2/api-guides/usb-serial-jtag-console.html)
 
 ### Using with USB CDC (USB_OTG peripheral)
 
 USB_OTG peripheral can also provide a USB serial port which works with this example.
 
-* First, connect the USB cable to the USB_OTG peripheral interface.
-* Second, run `idf.py menuconfig` and enable `CONFIG_ESP_CONSOLE_USB_CDC` option.
+- First, connect the USB cable to the USB_OTG peripheral interface.
+- Second, run `idf.py menuconfig` and enable `CONFIG_ESP_CONSOLE_USB_CDC` option.
 
 For more details about connecting and configuring USB_OTG (including pin numbers), see the IDF Programming Guide:
-* [ESP32-S2 USB_OTG](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s2/api-guides/usb-otg-console.html)
-* [ESP32-S3 USB_OTG](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/api-guides/usb-otg-console.html)
+
+- [ESP32-S2 USB_OTG](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s2/api-guides/usb-otg-console.html)
+- [ESP32-S3 USB_OTG](https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/api-guides/usb-otg-console.html)
 
 ### Other configuration options
 
@@ -77,22 +79,22 @@ To disable this, run `idf.py menuconfig` and disable `CONFIG_CONSOLE_STORE_HISTO
 
 ### Configure the project
 
-```
+```powershell
 idf.py menuconfig
 ```
 
-* Enable/Disable storing command history in flash and load the history in a next example run. Linenoise line editing library provides functions to save and load
+- Enable/Disable storing command history in flash and load the history in a next example run. Linenoise line editing library provides functions to save and load
   command history. If this option is enabled, initializes a FAT filesystem and uses it to store command history.
-  * `Example Configuration > Store command history in flash`
+  - `Example Configuration > Store command history in flash`
 
-* Accept/Ignore empty lines inserted into the console. If an empty line is inserted to the console, the Console can either ignore empty lines (the example would continue), or break on emplty lines (the example would stop after an empty line).
-  * `Example Configuration > Ignore empty lines inserted into the console`
+- Accept/Ignore empty lines inserted into the console. If an empty line is inserted to the console, the Console can either ignore empty lines (the example would continue), or break on emplty lines (the example would stop after an empty line).
+  - `Example Configuration > Ignore empty lines inserted into the console`
 
 ### Build and Flash
 
 Build the project and flash it to the board, then run monitor tool to view serial output:
 
-```
+```powershell
 idf.py -p PORT flash monitor
 ```
 
@@ -188,6 +190,7 @@ classDiagram
 ```
 
 **Flow summary:**
+
 - **Registration:** You define a `cli_command_t` (which contains `cli_arg_t` descriptors). When registered, a `cli_registered_cmd_t` is created internally with argtable3 structs and stored in `cli_state_t`.
 - **Execution:** When the user types a command, the wrapper parses arguments via argtable3, converts them into `cli_arg_value_t` values, packs everything into a `cli_context_t`, and calls your callback.
 - **Initialization:** `cli_config_t` is passed to `cli_init()` which copies its values into the `cli_state_t` singleton.
@@ -196,7 +199,7 @@ classDiagram
 
 The example below shows how a user-defined command (`echo`) is stored internally and linked back through `cmd_def`:
 
-```
+```text
 User defines:                       API stores internally:
 
 cli_command_t echo_cmd = {          cli_registered_cmd_t {
@@ -210,7 +213,7 @@ cli_command_t echo_cmd = {          cli_registered_cmd_t {
 
 At **execution time**, when the user types `echo -m "hello" -n 3`:
 
-```
+```text
 1. esp_console calls cli_command_wrapper(argc, argv)
                           │
 2. Finds matching         │    cli_registered_cmd_t.cmd_def->name == "echo"
@@ -246,9 +249,9 @@ At **execution time**, when the user types `echo -m "hello" -n 3`:
 
 ### Line Endings
 
-The line endings in the Console Example are configured to match particular serial monitors. Therefore, if the following log output appears, consider using a different serial monitor (e.g. Putty for Windows) or modify the example's [UART configuration](#Configuring-UART).
+The line endings in the Console Example are configured to match particular serial monitors. Therefore, if the following log output appears, consider using a different serial monitor (e.g. Putty for Windows) or modify the example's [UART configuration](#configure-the-project).
 
-```
+```text
 This is an example of ESP-IDF console component.
 Type 'help' to get the list of commands.
 Use UP/DOWN arrows to navigate through command history.
@@ -269,20 +272,21 @@ On Windows 10, macOS, Linux, USB CDC devices do not require additional drivers t
 
 If the USB serial port doesn't appear in the system after flashing the example, check the following:
 
-* Check that the USB device is detected by the OS.
+- Check that the USB device is detected by the OS.
   VID/PID pair for ESP32-S2 is 303a:0002.
 
   - On Windows, check the Device Manager
   - On macOS, check USB section in the System Information utility
   - On Linux, check `lsusb` output
 
-* If the device is not detected, check the USB cable connection (D+, D-, and ground should be connected)
+- If the device is not detected, check the USB cable connection (D+, D-, and ground should be connected)
 
 ## Implementation Details
 
 ### CLI-API Initialization
 
 The `cli_init()` function handles:
+
 - NVS initialization for persistent storage
 - FATFS setup for command history
 - Console peripheral configuration (UART/USB)
@@ -293,16 +297,19 @@ The `cli_init()` function handles:
 CLI-API provides two registration methods:
 
 1. **Simple Commands** (no arguments):
+
    ```c
    cli_register_simple_command("hello", "Prints Hello World", cmd_hello);
    ```
 
 2. **Complex Commands** (with arguments):
+
    ```c
    cli_register_command(&echo_cmd);
    ```
 
 The library automatically:
+
 - Allocates argtable3 structures
 - Configures argument parsing
 - Registers with esp_console
@@ -311,6 +318,7 @@ The library automatically:
 ### Argument Parsing
 
 The CLI-API wrapper automatically:
+
 - Parses command-line arguments using argtable3
 - Validates required vs optional arguments
 - Converts strings to appropriate types (int, string, bool)
@@ -320,6 +328,7 @@ The CLI-API wrapper automatically:
 ### Command History
 
 When `store_history = true`:
+
 - A FAT filesystem is mounted on the "storage" partition
 - Command history is saved to `/data/history.txt`
 - History persists across reboots
