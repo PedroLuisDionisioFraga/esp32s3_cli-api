@@ -1,0 +1,40 @@
+name: Build Examples
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+# Cancel superseded runs of the same PR/branch instead of piling them up.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # idf_ver values are espressif/idf Docker tags: https://hub.docker.com/r/espressif/idf/tags
+        idf_ver: ["release-v6.0", "latest"]
+        # All BLE-capable targets declared in idf_component.yml.
+        idf_target: ["esp32", "esp32s3", "esp32c3", "esp32c6", "esp32h2"]
+        # One entry per directory under examples/.
+        example: ["basic", "advanced"]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # ESP-IDF resolves the example's override_path dependency by directory
+          # name, so the repo must live in a folder named after the component
+          # (the default checkout folder is the repo name, esp32s3_cli-api).
+          path: cli-api
+
+      - name: Build ${{ matrix.example }} example (IDF ${{ matrix.idf_ver }}, ${{ matrix.idf_target }})
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: ${{ matrix.idf_ver }}
+          target: ${{ matrix.idf_target }}
+          path: cli-api/examples/${{ matrix.example }}
