@@ -18,6 +18,11 @@
 
 #include "esp_err.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /* ========================================================================== */
 /*                              CONFIGURATION                                 */
 /* ========================================================================== */
@@ -222,5 +227,9 @@ esp_err_t cli_register_simple_command(const char *name, const char *description,
  * @return esp_err_t ESP_OK if all registered successfully
  */
 esp_err_t cli_register_commands(const cli_command_t *commands, size_t count);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* CLI_API_H */
