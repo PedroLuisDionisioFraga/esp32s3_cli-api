@@ -40,7 +40,7 @@
 /**
  * @brief Maximum prompt size
  */
-#define CLI_PROMPT_MAX_LEN 64
+#define CLI_PROMPT_MAX_LEN 128
 
 /**
  * @brief Command history size
