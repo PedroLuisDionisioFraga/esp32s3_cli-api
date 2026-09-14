@@ -1,0 +1,16 @@
+menu "CLI API Configuration"
+
+    config CLI_API_IGNORE_EMPTY_LINES
+        bool "Ignore empty lines returned by the console"
+        default y
+        help
+            linenoise() returns NULL when it reads an empty/aborted line —
+            this happens routinely on "dumb" terminals (USB Serial JTAG,
+            Web Serial) that don't support the escape sequences used to
+            distinguish an empty Enter press from EOF/Ctrl+C.
+
+            If enabled (default), cli_run() ignores a NULL line and keeps
+            reading. If disabled, cli_run() treats a NULL line as an exit
+            condition and returns from the REPL loop.
+
+endmenu

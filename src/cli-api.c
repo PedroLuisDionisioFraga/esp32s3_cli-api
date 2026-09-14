@@ -103,7 +103,7 @@ esp_err_t cli_run(void)
 
     if (line == NULL)
     {
-#if CONFIG_CONSOLE_IGNORE_EMPTY_LINES
+#if CONFIG_CLI_API_IGNORE_EMPTY_LINES
       continue;
 #else
       break;
