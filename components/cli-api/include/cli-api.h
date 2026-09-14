@@ -23,9 +23,17 @@
 /* ========================================================================== */
 
 /**
- * @brief Maximum number of arguments per command
+ * @brief Maximum number of option definitions per command (cli_command_t.args[])
  */
 #define CLI_MAX_ARGS 8
+
+/**
+ * @brief Maximum number of tokens on the typed command line (argc), passed to esp_console
+ *
+ * Each long option with a value uses two tokens (e.g. --pin 10). This limit is independent
+ * of CLI_MAX_ARGS. Default matches ESP-IDF esp_console (32).
+ */
+#define CLI_MAX_CMDLINE_ARGS 32
 
 /**
  * @brief Maximum number of registered commands
@@ -33,7 +41,7 @@
 #define CLI_MAX_COMMANDS 32
 
 /**
- * @brief Maximum command line length
+ * @brief Maximum command line length in bytes (characters)
  */
 #define CLI_MAX_CMDLINE_LENGTH 256
 

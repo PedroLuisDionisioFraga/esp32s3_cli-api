@@ -220,7 +220,7 @@ static void cli_init_peripheral(void)
 static void cli_init_linenoise(void)
 {
   /* Initialize esp_console */
-  esp_console_config_t console_config = {.max_cmdline_args = CLI_MAX_ARGS,
+  esp_console_config_t console_config = {.max_cmdline_args = CLI_MAX_CMDLINE_ARGS,
                                          .max_cmdline_length = CLI_MAX_CMDLINE_LENGTH,
 #if CONFIG_LOG_COLORS
                                          .hint_color = atoi(LOG_COLOR_CYAN)

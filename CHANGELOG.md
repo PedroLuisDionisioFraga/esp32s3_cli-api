@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.7] - 2026-09-14
+
+### Fixed
+
+- Command lines with more than eight tokens (e.g. several `--option value` pairs) no longer lose trailing arguments: `esp_console` now uses `CLI_MAX_CMDLINE_ARGS` (32) instead of reusing `CLI_MAX_ARGS` (8).
+
 ## [1.0.4] - 2026-07-11
 
 ### Added
