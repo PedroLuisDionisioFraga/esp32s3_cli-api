@@ -6,6 +6,7 @@ IndentCaseLabels: true  # Indent case into switch
 AlignEscapedNewlines: LeftWithLastLine
 SpacesBeforeTrailingComments: 2
 AlignConsecutiveMacros: true
+IndentExternBlock: NoIndent
 BinPackArguments: false
 AllowAllArgumentsOnNextLine: false
 SortIncludes: true

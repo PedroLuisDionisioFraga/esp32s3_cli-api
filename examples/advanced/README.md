@@ -54,6 +54,7 @@ idf.py -p PORT flash monitor
 === ESP32 CLI-API Advanced Example ===
 Type 'help' to get the list of commands.
 Use UP/DOWN arrows for command history.
+Type 'sync' to save history to flash (it lives in RAM otherwise).
 Press TAB to auto-complete.
 
 CLI-API Examples:

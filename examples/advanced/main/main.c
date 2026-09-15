@@ -430,6 +430,7 @@ void app_main(void)
               "=== ESP32 CLI-API Advanced Example ===\n"
               "Type 'help' to get the list of commands.\n"
               "Use UP/DOWN arrows for command history.\n"
+              "Type 'sync' to save history to flash (it lives in RAM otherwise).\n"
               "Press TAB to auto-complete.\n"
               "\n"
               "CLI-API Examples:\n"
@@ -440,7 +441,7 @@ void app_main(void)
               "System / WiFi / NVS commands also available.\n"
               "=======================================",
     .register_help = true,
-    .store_history = true,
+    .history_sync = true,
   };
 
   ESP_ERROR_CHECK(cli_init(&cli_cfg));
