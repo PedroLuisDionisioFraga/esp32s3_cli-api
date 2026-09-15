@@ -138,7 +138,11 @@ typedef struct
   const char *prompt; /**< Console prompt (ex: "esp32>"). NULL uses default */
   const char *banner; /**< Welcome message. NULL uses default */
   bool register_help; /**< true = automatically register 'help' command */
-  bool store_history; /**< true = save history to filesystem (requires "storage" partition) */
+  bool history_sync;  /**< true = register the 'sync' command. Command history always lives in
+                       *   RAM only and is cleared on reset; running 'sync' is the only thing
+                       *   that ever writes it to flash. Requires a "storage" (data/fat)
+                       *   partition — if none exists, 'sync' fails with a clear error instead
+                       *   of failing silently at boot. */
 } cli_config_t;
 
 /**
@@ -149,7 +153,7 @@ typedef struct
     .prompt = NULL,          \
     .banner = NULL,          \
     .register_help = true,   \
-    .store_history = false,  \
+    .history_sync = false,   \
   }
 
 /* ========================================================================== */

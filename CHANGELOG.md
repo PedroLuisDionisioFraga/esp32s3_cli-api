@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** command history is now RAM-only by default and cleared on every reset. `cli_config_t.store_history` was renamed to `history_sync`; when `true`, `cli_init()` registers a new `sync` command that persists the in-memory history to `/data/history.txt` on demand, instead of every command line being auto-saved to flash. This removes an unconditional per-command flash write (unnecessary wear) and, since the "storage" partition is now mounted lazily on the first `sync` instead of at boot, a consumer that never runs `sync` has no dependency on that partition existing at all — one that previously failed silently with just a boot-time log line now fails loudly, in `sync`'s own output, exactly when it matters.
+- Removed the now-dead `CONSOLE_STORE_HISTORY` example Kconfig option (never actually read by either example's `main.c`) and the `CONSOLE_IGNORE_EMPTY_LINES` example option superseded by the component's own `CLI_API_IGNORE_EMPTY_LINES` (see 1.0.7 below).
+
+### Migration from 1.0.7
+
+```c
+/* Before */
+cli_config_t cli_cfg = { .store_history = true, /* ... */ };
+
+/* After */
+cli_config_t cli_cfg = { .history_sync = true, /* ... */ };
+```
+
+History is available via UP/DOWN arrows exactly as before; run `sync` when you want it saved to flash.
+
 ## [1.0.7] - 2026-09-14
 
 ### Fixed

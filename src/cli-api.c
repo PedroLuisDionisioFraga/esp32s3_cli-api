@@ -46,21 +46,6 @@ esp_err_t cli_init(const cli_config_t *config)
     return err;
   }
 
-  /* Initialize filesystem if history enabled */
-  if (config->store_history)
-  {
-    esp_err_t err = cli_init_filesystem();
-    if (err != ESP_OK)
-    {
-      ESP_LOGW(TAG, "Failed to mount filesystem, history disabled");
-      s_cli.store_history = false;
-    }
-    else
-      s_cli.store_history = true;
-  }
-  else
-    s_cli.store_history = false;
-
   cli_init_peripheral();
   cli_init_linenoise();
 
@@ -68,6 +53,12 @@ esp_err_t cli_init(const cli_config_t *config)
 
   if (config->register_help)
     esp_console_register_help_command();
+
+  /* History always lives in RAM only; 'sync' is the only thing that ever
+   * writes it to flash, and it mounts the storage partition lazily on its
+   * first run — nothing here depends on that partition existing. */
+  if (config->history_sync)
+    cli_register_history_sync_command();
 
   if (config->banner != NULL)
     printf("\n%s\n", config->banner);
@@ -111,11 +102,7 @@ esp_err_t cli_run(void)
     }
 
     if (strlen(line) > 0)
-    {
       linenoiseHistoryAdd(line);
-      if (s_cli.store_history)
-        linenoiseHistorySave(CLI_HISTORY_PATH);
-    }
 
     /* Execute the command */
     int ret;
@@ -142,12 +129,7 @@ void cli_deinit(void)
   if (s_cli.initialized)
   {
     esp_console_deinit();
-
-    if (s_cli.store_history)
-    {
-      cli_deinit_filesystem();
-      s_cli.store_history = false;
-    }
+    cli_deinit_filesystem(); /* no-op if 'sync' was never run */
 
     s_cli.initialized = false;
     s_cli.cmd_count = 0;

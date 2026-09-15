@@ -22,7 +22,6 @@
 cli_state_t s_cli = {
   .prompt = "esp32-cli> ",
   .initialized = false,
-  .store_history = false,
   .wl_handle = WL_INVALID_HANDLE,
   .cmd_count = 0,
 };

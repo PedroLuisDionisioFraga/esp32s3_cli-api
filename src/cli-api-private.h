@@ -39,8 +39,8 @@ typedef struct
 {
   char prompt[CLI_PROMPT_MAX_LEN];             /**< Console prompt string */
   bool initialized;                            /**< true if console was initialized */
-  bool store_history;                          /**< true if history persistence is enabled */
-  wl_handle_t wl_handle;                       /**< Wear-levelling handle for FATFS */
+  wl_handle_t wl_handle;                       /**< Wear-levelling handle for FATFS, WL_INVALID_HANDLE
+                                                *   until 'sync' mounts it for the first time */
   cli_registered_cmd_t cmds[CLI_MAX_COMMANDS]; /**< Registered commands */
   uint8_t cmd_count;                           /**< Number of registered commands */
 } cli_state_t;
@@ -71,5 +71,9 @@ void cli_init_linenoise(void);
 
 /** @brief Configure the console prompt string. Implemented in cli-api-console.c */
 void cli_setup_prompt(const char *prompt_str);
+
+/** @brief Register the optional 'sync' command (persists history to flash on demand).
+ *  Implemented in cli-api-storage.c */
+void cli_register_history_sync_command(void);
 
 #endif /* CLI_API_PRIVATE_H */

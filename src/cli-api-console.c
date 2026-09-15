@@ -4,7 +4,9 @@
  *
  * @brief linenoise/esp_console wiring and prompt configuration.
  *
- * Reads `s_cli.store_history` and writes `s_cli.prompt`.
+ * Writes `s_cli.prompt`. Command history itself is always kept in RAM only by
+ * linenoise's own history buffer (see cli-api.c); this file never touches
+ * flash — see cli-api-storage.c for the opt-in 'sync' command that does.
  *
  * @version 0.1
  * @date 2026-02-05
@@ -40,10 +42,6 @@ void cli_init_linenoise(void)
   linenoiseHistorySetMaxLen(CLI_HISTORY_SIZE);
   linenoiseSetMaxLineLen(CLI_MAX_CMDLINE_LENGTH);
   linenoiseAllowEmpty(false);
-
-  /* Load history if configured */
-  if (s_cli.store_history)
-    linenoiseHistoryLoad(CLI_HISTORY_PATH);
 
   /* Detect escape sequences support */
 #if defined(CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG)
