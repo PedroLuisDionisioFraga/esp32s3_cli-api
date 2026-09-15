@@ -6,7 +6,7 @@
  *
  * This is the only file that defines `s_cli`. cli_init/cli_run/cli_deinit and
  * command registration are all invoked synchronously from a single task (no
- * ISR or concurrent task touches this state), so the other src/*.c files
+ * ISR or concurrent task touches this state), so the other src/ files
  * access its fields directly through the `extern` declaration in
  * cli-api-private.h rather than through accessor functions.
  *

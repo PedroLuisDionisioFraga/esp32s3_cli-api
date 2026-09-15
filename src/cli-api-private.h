@@ -51,7 +51,7 @@ typedef struct
 extern cli_state_t s_cli;
 
 /* -------------------------------------------------------------------------- */
-/*             Cross-file helpers (implemented in other src/*.c)              */
+/*                  Cross-file helpers (implemented elsewhere)                */
 /* -------------------------------------------------------------------------- */
 
 /** @brief Initialize NVS (Non-Volatile Storage). Implemented in cli-api-storage.c */
