@@ -18,14 +18,27 @@
 
 #include "esp_err.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /* ========================================================================== */
 /*                              CONFIGURATION                                 */
 /* ========================================================================== */
 
 /**
- * @brief Maximum number of arguments per command
+ * @brief Maximum number of option definitions per command (cli_command_t.args[])
  */
 #define CLI_MAX_ARGS 8
+
+/**
+ * @brief Maximum number of tokens on the typed command line (argc), passed to esp_console
+ *
+ * Each long option with a value uses two tokens (e.g. --pin 10). This limit is independent
+ * of CLI_MAX_ARGS. Default matches ESP-IDF esp_console (32).
+ */
+#define CLI_MAX_CMDLINE_ARGS 32
 
 /**
  * @brief Maximum number of registered commands
@@ -33,7 +46,7 @@
 #define CLI_MAX_COMMANDS 32
 
 /**
- * @brief Maximum command line length
+ * @brief Maximum command line length in bytes (characters)
  */
 #define CLI_MAX_CMDLINE_LENGTH 256
 
@@ -125,7 +138,11 @@ typedef struct
   const char *prompt; /**< Console prompt (ex: "esp32>"). NULL uses default */
   const char *banner; /**< Welcome message. NULL uses default */
   bool register_help; /**< true = automatically register 'help' command */
-  bool store_history; /**< true = save history to filesystem (requires "storage" partition) */
+  bool history_sync;  /**< true = register the 'sync' command. Command history always lives in
+                       *   RAM only and is cleared on reset; running 'sync' is the only thing
+                       *   that ever writes it to flash. Requires a "storage" (data/fat)
+                       *   partition — if none exists, 'sync' fails with a clear error instead
+                       *   of failing silently at boot. */
 } cli_config_t;
 
 /**
@@ -136,7 +153,7 @@ typedef struct
     .prompt = NULL,          \
     .banner = NULL,          \
     .register_help = true,   \
-    .store_history = false,  \
+    .history_sync = false,   \
   }
 
 /* ========================================================================== */
@@ -214,5 +231,9 @@ esp_err_t cli_register_simple_command(const char *name, const char *description,
  * @return esp_err_t ESP_OK if all registered successfully
  */
 esp_err_t cli_register_commands(const cli_command_t *commands, size_t count);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* CLI_API_H */

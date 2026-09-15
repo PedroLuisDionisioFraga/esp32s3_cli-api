@@ -30,7 +30,7 @@ idf.py add-dependency "pedroluisdionisiofraga/cli-api"
 - **Simple Command Registration**: Define commands using declarative structs instead of complex argtable3 code
 - **Multiple Argument Types**: Support for integers, strings, and boolean flags
 - **Automatic Help Generation**: Built-in help system for all registered commands
-- **Command History**: Persistent command history stored in flash memory
+- **Command History**: RAM-only by default (cleared on reset); the `sync` command persists it to flash on demand
 - **Multiple Interface Support**: UART, USB_SERIAL_JTAG, and USB_CDC
 - **Example Commands**: Includes WiFi, NVS, and system management commands
 - **Clean C API**: No extern "C" wrappers needed, pure C implementation
@@ -73,22 +73,15 @@ For more details about connecting and configuring USB_OTG (including pin numbers
 
 ### Other configuration options
 
-This example has an option to store the command history in Flash. This option is enabled by default.
+Command history lives in RAM only and is cleared on every reset — nothing is written to flash unless you explicitly run the `sync` command (see [Command History](#command-history) below). This is a compile-time choice (`cli_config_t.history_sync`), not a menuconfig option.
 
-To disable this, run `idf.py menuconfig` and disable `CONFIG_CONSOLE_STORE_HISTORY` option.
+Whether an empty line (e.g. EOF/Ctrl+C on a dumb terminal) breaks the console loop or is silently ignored is controlled by this component's own `CLI API Configuration > Ignore empty lines returned by the console` menuconfig option, enabled (ignore) by default.
 
 ### Configure the project
 
 ```powershell
 idf.py menuconfig
 ```
-
-- Enable/Disable storing command history in flash and load the history in a next example run. Linenoise line editing library provides functions to save and load
-  command history. If this option is enabled, initializes a FAT filesystem and uses it to store command history.
-  - `Example Configuration > Store command history in flash`
-
-- Accept/Ignore empty lines inserted into the console. If an empty line is inserted to the console, the Console can either ignore empty lines (the example would continue), or break on emplty lines (the example would stop after an empty line).
-  - `Example Configuration > Ignore empty lines inserted into the console`
 
 ### Build and Flash
 
@@ -160,7 +153,7 @@ classDiagram
         const char* prompt
         const char* banner
         bool register_help
-        bool store_history
+        bool history_sync
     }
 
     class cli_registered_cmd_t {
@@ -174,7 +167,6 @@ classDiagram
         <<internal - singleton>>
         char prompt[CLI_PROMPT_MAX_LEN]
         bool initialized
-        bool store_history
         wl_handle_t wl_handle
         cli_registered_cmd_t cmds[CLI_MAX_COMMANDS]
         uint8_t cmd_count
@@ -287,10 +279,10 @@ If the USB serial port doesn't appear in the system after flashing the example, 
 
 The `cli_init()` function handles:
 
-- NVS initialization for persistent storage
-- FATFS setup for command history
+- NVS initialization
 - Console peripheral configuration (UART/USB)
-- Linenoise library setup with line editing, completion, and history
+- Linenoise library setup with line editing, completion, and (RAM-only) history
+- Optionally registers the `sync` command (see [Command History](#command-history))
 
 ### Command Registration
 
@@ -327,12 +319,13 @@ The CLI-API wrapper automatically:
 
 ### Command History
 
-When `store_history = true`:
+Command history always lives in RAM (via linenoise's own history buffer) and is accessible with the UP/DOWN arrow keys — it is cleared on every reset, and nothing is ever written to flash automatically.
 
-- A FAT filesystem is mounted on the "storage" partition
-- Command history is saved to `/data/history.txt`
-- History persists across reboots
-- Accessible via UP/DOWN arrow keys in the console
+When `history_sync = true`, `cli_init()` also registers a `sync` command:
+
+- Running `sync` mounts a FAT filesystem on the "storage" partition (lazily, the first time it's called) and saves the current in-memory history to `/data/history.txt`.
+- If no such partition exists, `sync` fails with a clear error telling you to add one — instead of `cli_init()` silently disabling history at boot with an easy-to-miss log line.
+- History is only ever restored if you load it yourself; the component does not read `/data/history.txt` back on boot.
 
 ## References
 
