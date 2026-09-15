@@ -14,9 +14,9 @@
 #ifndef CLI_API_PRIVATE_H
 #define CLI_API_PRIVATE_H
 
-#include "cli-api.h"
-
 #include <esp_vfs_fat.h> /* wl_handle_t */
+
+#include "cli-api.h"
 
 /* Mount path for the FATFS partition used to persist command history */
 #define CLI_MOUNT_PATH   "/data"

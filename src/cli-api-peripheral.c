@@ -13,16 +13,15 @@
  *
  */
 
-#include "cli-api-private.h"
-
+#include <driver/uart.h>
+#include <driver/uart_vfs.h>
 #include <fcntl.h>
 #include <sdkconfig.h>
 #include <soc/soc_caps.h>
 #include <stdio.h>
 #include <unistd.h>
 
-#include <driver/uart.h>
-#include <driver/uart_vfs.h>
+#include "cli-api-private.h"
 #if SOC_USB_SERIAL_JTAG_SUPPORTED
 #include <driver/usb_serial_jtag.h>
 #include <driver/usb_serial_jtag_vfs.h>

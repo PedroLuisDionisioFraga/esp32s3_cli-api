@@ -17,13 +17,13 @@
  *
  */
 
-#include "cli-api-private.h"
-
 #include <esp_log.h>
 #include <linenoise/linenoise.h>
 #include <nvs.h>
 #include <nvs_flash.h>
 #include <stdio.h>
+
+#include "cli-api-private.h"
 
 static const char *TAG = "cli-api";
 

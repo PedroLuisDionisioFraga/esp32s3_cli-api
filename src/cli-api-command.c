@@ -13,13 +13,13 @@
  *
  */
 
-#include "cli-api-private.h"
-
 #include <argtable3/argtable3.h>
 #include <esp_console.h>
 #include <esp_log.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "cli-api-private.h"
 
 static const char *TAG = "cli-api";
 

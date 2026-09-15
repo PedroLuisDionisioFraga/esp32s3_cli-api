@@ -14,14 +14,14 @@
  *
  */
 
-#include "cli-api-private.h"
-
 #include <esp_console.h>
 #include <esp_log.h>
 #include <linenoise/linenoise.h>
 #include <sdkconfig.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "cli-api-private.h"
 
 static const char *TAG = "cli-api";
 
