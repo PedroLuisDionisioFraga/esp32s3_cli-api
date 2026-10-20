@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-20
+
 ### Added
 
 - `CLI API Configuration > Terminal mode` menuconfig choice: **Auto-detect** (default; probe the terminal at boot, USB_SERIAL_JTAG always gets line editing), **Force line editing** (for terminals that support VT100 but don't answer the probe) and **Force dumb mode** (Web Serial / non-VT100 hosts).
