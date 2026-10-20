@@ -13,4 +13,35 @@ menu "CLI API Configuration"
             reading. If disabled, cli_run() treats a NULL line as an exit
             condition and returns from the REPL loop.
 
+    choice CLI_API_TERMINAL_MODE
+        prompt "Terminal mode"
+        default CLI_API_TERMINAL_MODE_AUTO
+        help
+            Selects whether linenoise runs with line editing (TAB completion,
+            hints, UP/DOWN history, cursor movement) or in "dumb" mode
+            (plain line input, no escape sequences).
+
+        config CLI_API_TERMINAL_MODE_AUTO
+            bool "Auto-detect"
+            help
+                Probe the terminal at boot with a Device Status Request
+                (ESC[5n) and enable line editing only if it answers. On USB
+                Serial JTAG the probe is skipped and line editing is always
+                enabled, since the host is usually not attached yet at boot.
+
+        config CLI_API_TERMINAL_MODE_LINE_EDITING
+            bool "Force line editing"
+            help
+                Skip the probe and always enable line editing. Use this if
+                your terminal supports VT100 escape sequences but does not
+                answer the probe in time (Auto falls back to dumb mode).
+
+        config CLI_API_TERMINAL_MODE_DUMB
+            bool "Force dumb mode"
+            help
+                Skip the probe and always use dumb mode. Use this for Web
+                Serial pages and other hosts that cannot render VT100 escape
+                sequences.
+    endchoice
+
 endmenu

@@ -71,7 +71,8 @@ esp_err_t cli_init(const cli_config_t *config)
 
   if (linenoiseIsDumbMode())
     printf("Terminal does not support escape sequences.\n"
-           "Line editing and history features are disabled.\n\n");
+           "Line editing and history features are disabled.\n"
+           "To override: menuconfig > CLI API Configuration > Terminal mode.\n\n");
 
   s_cli.initialized = true;
   ESP_LOGI(TAG, "CLI successfully initialized");

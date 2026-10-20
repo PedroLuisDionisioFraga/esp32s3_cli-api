@@ -35,7 +35,6 @@ void cli_init_linenoise(void)
   ESP_ERROR_CHECK(esp_console_init(&console_config));
 
   /* Configure linenoise */
-  linenoiseSetDumbMode(1); /* Required for Web Serial / dumb terminals (no ANSI/VT100) */
   linenoiseSetMultiLine(1);
   linenoiseSetCompletionCallback(&esp_console_get_completion);
   linenoiseSetHintsCallback((linenoiseHintsCallback *)&esp_console_get_hint);
@@ -43,14 +42,17 @@ void cli_init_linenoise(void)
   linenoiseSetMaxLineLen(CLI_MAX_CMDLINE_LENGTH);
   linenoiseAllowEmpty(false);
 
-  /* Detect escape sequences support */
-#if defined(CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG)
-  /* USB Serial JTAG: skip detection, assume smart terminal */
+  /* Select line editing or dumb mode (CLI API Configuration > Terminal mode) */
+#if CONFIG_CLI_API_TERMINAL_MODE_DUMB
+  /* Web Serial / hosts without ANSI/VT100 support */
+  linenoiseSetDumbMode(1);
+#elif CONFIG_CLI_API_TERMINAL_MODE_LINE_EDITING || defined(CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG)
+  /* Forced, or USB Serial JTAG: the host is usually not attached yet at boot,
+   * so the probe would fail — skip detection and assume a smart terminal */
   linenoiseSetDumbMode(0);
 #else
-  const int probe_status = linenoiseProbe();
-  if (probe_status)
-    linenoiseSetDumbMode(1);
+  /* Auto: dumb mode only if the terminal does not answer the probe */
+  linenoiseSetDumbMode(linenoiseProbe() != 0);
 #endif
 }
 
