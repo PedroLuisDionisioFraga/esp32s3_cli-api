@@ -13,15 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `history` command: lists the in-memory command history (numbered, oldest first); `history -c` clears it, UP/DOWN recall included. Registered together with `sync` when `cli_config_t.history_sync = true`.
 - `examples/terminal`: shows line editing (TAB completion, hints, UP/DOWN, Backspace), the terminal mode option (`term` command reports the configured and in-use mode) and the `history` / `sync` commands.
 
-### Changed
-
-- **Breaking:** command history is now RAM-only by default and cleared on every reset. `cli_config_t.store_history` was renamed to `history_sync`; when `true`, `cli_init()` registers a new `sync` command that persists the in-memory history to `/data/history.txt` on demand, instead of every command line being auto-saved to flash. This removes an unconditional per-command flash write (unnecessary wear) and, since the "storage" partition is now mounted lazily on the first `sync` instead of at boot, a consumer that never runs `sync` has no dependency on that partition existing at all — one that previously failed silently with just a boot-time log line now fails loudly, in `sync`'s own output, exactly when it matters.
-- Removed the now-dead `CONSOLE_STORE_HISTORY` example Kconfig option (never actually read by either example's `main.c`) and the `CONSOLE_IGNORE_EMPTY_LINES` example option superseded by the component's own `CLI_API_IGNORE_EMPTY_LINES` (see 1.0.7 below).
-
 ### Fixed
 
 - TAB completion, UP/DOWN history and cursor editing never worked on UART and USB CDC consoles: linenoise was forced into dumb mode at init, and a successful terminal probe never switched it back. Dumb mode is now used only when the probe fails (or when forced via `Terminal mode`).
 - In dumb mode, Backspace erased the character but left the cursor in place on terminals that send DEL (0x7F). DEL is now read as BS, so the cursor moves back.
+
+## [1.1.0] - 2026-09-14
+
+### Changed
+
+- **Breaking:** command history is now RAM-only by default and cleared on every reset. `cli_config_t.store_history` was renamed to `history_sync`; when `true`, `cli_init()` registers a new `sync` command that persists the in-memory history to `/data/history.txt` on demand, instead of every command line being auto-saved to flash. This removes an unconditional per-command flash write (unnecessary wear) and, since the "storage" partition is now mounted lazily on the first `sync` instead of at boot, a consumer that never runs `sync` has no dependency on that partition existing at all — one that previously failed silently with just a boot-time log line now fails loudly, in `sync`'s own output, exactly when it matters.
+- Removed the now-dead `CONSOLE_STORE_HISTORY` example Kconfig option (never actually read by either example's `main.c`) and the `CONSOLE_IGNORE_EMPTY_LINES` example option superseded by the component's own `CLI_API_IGNORE_EMPTY_LINES` (see 1.0.7 below).
 
 ### Migration from 1.0.7
 
