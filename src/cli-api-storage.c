@@ -5,10 +5,10 @@
  * @brief NVS/FATFS setup and the optional 'sync' command for history persistence.
  *
  * This is the only file that touches `s_cli.wl_handle`. The FATFS partition is
- * mounted lazily, the first time 'sync' runs — never at boot — so a consumer
- * that never calls 'sync' has no dependency on a "storage" partition existing
- * at all, and a missing partition is reported right where it matters (in the
- * command's own output) instead of as an easy-to-miss boot-time log line.
+ * only mounted when `history_sync` is enabled: at boot to restore the saved
+ * history, or on the first 'sync' if that mount failed. A consumer that never
+ * enables `history_sync` has no dependency on a "storage" partition existing
+ * at all, and 'sync' reports a missing partition in its own output.
  *
  * @version 0.1
  * @date 2026-02-05

@@ -48,6 +48,32 @@ void cli_history_add(const char *line)
   s_cli.history[s_cli.history_len++] = copy;
 }
 
+void cli_history_load(const char *path)
+{
+  FILE *f = fopen(path, "r");
+  if (f == NULL)
+    return; /* nothing saved yet */
+
+  char *line = malloc(CLI_MAX_CMDLINE_LENGTH + 1);
+  if (line == NULL)
+  {
+    fclose(f);
+    return;
+  }
+
+  /* Through cli_history_add(), not linenoiseHistoryLoad(), so the copy that
+   * 'history' prints stays identical to linenoise's list */
+  while (fgets(line, CLI_MAX_CMDLINE_LENGTH + 1, f) != NULL)
+  {
+    line[strcspn(line, "\r\n")] = '\0';
+    if (line[0] != '\0')
+      cli_history_add(line);
+  }
+
+  free(line);
+  fclose(f);
+}
+
 void cli_history_clear(void)
 {
   linenoiseHistoryFree();
