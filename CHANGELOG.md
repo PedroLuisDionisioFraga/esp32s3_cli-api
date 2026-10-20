@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-10-20
+
 ### Fixed
 
 - Auto-detect now recovers when the terminal answers the boot probe too late (e.g. a host app that had just connected): the first escape sequence it sends (arrow key, late `ESC[0n` reply) switches to line editing from the next prompt, instead of staying in dumb mode until the next reset.
