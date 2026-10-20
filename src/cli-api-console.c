@@ -20,8 +20,31 @@
 #include <sdkconfig.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "cli-api-private.h"
+
+#define ASCII_BS  0x08
+#define ASCII_DEL 0x7F
+
+/**
+ * @brief linenoise read function that turns DEL into BS.
+ *
+ * Most terminals send DEL for the Backspace key. In dumb mode linenoise erases
+ * with "\b " and then echoes the key it received; DEL is not rendered, so the
+ * cursor would stay one column to the right. Echoing BS instead moves it back.
+ * Line-editing mode treats both keys as backspace, so it is unaffected.
+ */
+static ssize_t cli_read_bytes(int fd, void *buf, size_t count)
+{
+  ssize_t nread = read(fd, buf, count);
+  char *bytes = buf;
+  for (ssize_t i = 0; i < nread; i++)
+    if (bytes[i] == ASCII_DEL)
+      bytes[i] = ASCII_BS;
+
+  return nread;
+}
 
 void cli_init_linenoise(void)
 {
@@ -54,6 +77,9 @@ void cli_init_linenoise(void)
   /* Auto: dumb mode only if the terminal does not answer the probe */
   linenoiseSetDumbMode(linenoiseProbe() != 0);
 #endif
+
+  /* Must come after linenoiseProbe(), which resets the read function to read() */
+  linenoiseSetReadFunction(cli_read_bytes);
 }
 
 void cli_setup_prompt(const char *prompt_str)
