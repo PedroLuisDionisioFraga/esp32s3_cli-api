@@ -54,14 +54,19 @@ esp_err_t cli_init(const cli_config_t *config)
   if (config->register_help)
     esp_console_register_help_command();
 
-  /* History always lives in RAM only; 'history' prints or clears it, and
-   * 'sync' is the only thing that ever writes it to flash, mounting the
-   * storage partition lazily on its first run — nothing here depends on that
-   * partition existing. */
+  /* History lives in RAM; 'history' prints or clears it, and 'sync' is the
+   * only thing that ever writes it to flash. With history_sync the saved file
+   * is restored here, after 'history' is registered so its copy is filled too.
+   * A missing "storage" partition is not fatal: history just starts empty. */
   if (config->history_sync)
   {
     cli_register_history_command();
     cli_register_history_sync_command();
+
+    if (cli_init_filesystem() == ESP_OK)
+      cli_history_load(CLI_HISTORY_PATH);
+    else
+      ESP_LOGW(TAG, "History not restored (no usable \"storage\" partition)");
   }
 
   if (config->banner != NULL)
@@ -95,6 +100,7 @@ esp_err_t cli_run(void)
   while (true)
   {
     /* Read line from user */
+    cli_console_prompt_begin();
     char *line = linenoise(s_cli.prompt);
 
     if (line == NULL)

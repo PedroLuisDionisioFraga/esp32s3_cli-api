@@ -34,7 +34,7 @@ idf.py -p PORT flash monitor
 4. Run `counter-add -n 5`, then `counter-show`. Press **UP** and **DOWN** to browse them.
 5. Type a few characters and press **Backspace**. Each press erases a character and moves the cursor back.
 6. Run `history` to list everything typed so far, then `history -c` to clear it. Press **UP**: nothing is recalled.
-7. Run `sync` to save the history to flash.
+7. Run `sync` to save the history to flash, then reset the board. `history` and **UP** still show the saved commands.
 
 ### Example Output
 

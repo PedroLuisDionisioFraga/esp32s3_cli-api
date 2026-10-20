@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-10-20
+
+### Fixed
+
+- Auto-detect now recovers when the terminal answers the boot probe too late (e.g. a host app that had just connected): the first escape sequence it sends (arrow key, late `ESC[0n` reply) switches to line editing from the next prompt, instead of staying in dumb mode until the next reset.
+- In dumb mode, escape sequences are dropped instead of being typed into the command line: arrow keys no longer produced `[A` / `[B` and a late probe reply no longer produced `[0n`, which ended up in the history (and, with `sync`, in flash).
+- With `history_sync = true`, history saved by `sync` is now restored at boot, for both UP/DOWN recall and the `history` command. It was never read back after 1.1.0, so a reset lost it, and the next `sync` overwrote `/data/history.txt` with only the new session. `cli_init()` now mounts the "storage" partition at boot in this mode; a missing partition only logs a warning.
+
 ## [1.2.0] - 2026-10-20
 
 ### Added

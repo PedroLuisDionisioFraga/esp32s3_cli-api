@@ -73,6 +73,10 @@ void cli_init_peripheral(void);
 /** @brief Initialize linenoise and esp_console. Implemented in cli-api-console.c */
 void cli_init_linenoise(void);
 
+/** @brief Call before each linenoise() prompt: applies a pending dumb -> line editing switch.
+ *  Implemented in cli-api-console.c */
+void cli_console_prompt_begin(void);
+
 /** @brief Configure the console prompt string. Implemented in cli-api-console.c */
 void cli_setup_prompt(const char *prompt_str);
 
@@ -82,6 +86,10 @@ void cli_register_history_sync_command(void);
 
 /** @brief Add a line to linenoise's history (and to the copy 'history' prints). Implemented in cli-api-history.c */
 void cli_history_add(const char *line);
+
+/** @brief Add every line of a saved history file via cli_history_add(); silent if the file doesn't exist.
+ *  Implemented in cli-api-history.c */
+void cli_history_load(const char *path);
 
 /** @brief Clear linenoise's history and the copy 'history' prints. Implemented in cli-api-history.c */
 void cli_history_clear(void);
