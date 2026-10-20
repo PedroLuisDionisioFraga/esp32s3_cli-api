@@ -18,6 +18,7 @@
 #include <esp_console.h>
 #include <linenoise/linenoise.h>
 #include <sdkconfig.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -25,10 +26,68 @@
 #include "cli-api-private.h"
 
 #define ASCII_BS  0x08
+#define ASCII_ESC 0x1B
 #define ASCII_DEL 0x7F
 
+/* Where we are inside an escape sequence that cli_keep_byte() is dropping */
+typedef enum
+{
+  ESC_NONE,  /* not in a sequence */
+  ESC_START, /* got ESC, next byte tells which kind */
+  ESC_CSI,   /* got ESC [, params until a final byte 0x40-0x7E */
+  ESC_SS3,   /* got ESC O, one final byte left */
+} esc_state_t;
+
+static esc_state_t s_esc_state = ESC_NONE;
+
 /**
- * @brief linenoise read function that turns DEL into BS.
+ * @brief Whether a received byte should reach linenoise.
+ *
+ * In dumb mode linenoise drops the ESC byte itself but keeps and echoes the
+ * rest ("[A" for an arrow key, "[0n" for a probe reply), which then ends up
+ * in the command line and in the history. Dropping the whole sequence here
+ * keeps that out. Line-editing mode needs the sequences, so they pass through.
+ */
+static bool cli_keep_byte(unsigned char c)
+{
+  switch (s_esc_state)
+  {
+    case ESC_NONE:
+      if (c != ASCII_ESC || !linenoiseIsDumbMode())
+        return true;
+      s_esc_state = ESC_START;
+      return false;
+
+    case ESC_START:
+      if (c < 0x20) /* ESC followed by a control key (e.g. Enter): not a sequence */
+      {
+        s_esc_state = ESC_NONE;
+        return true;
+      }
+      s_esc_state = (c == '[') ? ESC_CSI : (c == 'O') ? ESC_SS3 : ESC_NONE;
+      return false;
+
+    case ESC_SS3:
+      s_esc_state = ESC_NONE;
+      return false;
+
+    case ESC_CSI:
+      if (c < 0x20) /* truncated sequence: keep the control key (Enter) */
+      {
+        s_esc_state = ESC_NONE;
+        return true;
+      }
+      if (c >= 0x40 && c <= 0x7E)
+        s_esc_state = ESC_NONE;
+      return false;
+  }
+
+  return true;
+}
+
+/**
+ * @brief linenoise read function: drops escape sequences in dumb mode and
+ * turns DEL into BS.
  *
  * Most terminals send DEL for the Backspace key. In dumb mode linenoise erases
  * with "\b " and then echoes the key it received; DEL is not rendered, so the
@@ -37,13 +96,25 @@
  */
 static ssize_t cli_read_bytes(int fd, void *buf, size_t count)
 {
-  ssize_t nread = read(fd, buf, count);
   char *bytes = buf;
-  for (ssize_t i = 0; i < nread; i++)
-    if (bytes[i] == ASCII_DEL)
-      bytes[i] = ASCII_BS;
+  ssize_t nread;
+  ssize_t kept;
 
-  return nread;
+  /* Read again if everything we got was part of a dropped sequence */
+  do
+  {
+    nread = read(fd, buf, count);
+    kept = 0;
+    for (ssize_t i = 0; i < nread; i++)
+    {
+      if (!cli_keep_byte((unsigned char)bytes[i]))
+        continue;
+
+      bytes[kept++] = (bytes[i] == ASCII_DEL) ? ASCII_BS : bytes[i];
+    }
+  } while (nread > 0 && kept == 0);
+
+  return nread < 0 ? nread : kept;
 }
 
 void cli_init_linenoise(void)
