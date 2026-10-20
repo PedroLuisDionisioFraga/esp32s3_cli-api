@@ -24,4 +24,6 @@ cli_state_t s_cli = {
   .initialized = false,
   .wl_handle = WL_INVALID_HANDLE,
   .cmd_count = 0,
+  .history_len = 0,
+  .history_mirror = false,
 };

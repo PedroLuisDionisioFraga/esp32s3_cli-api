@@ -54,11 +54,15 @@ esp_err_t cli_init(const cli_config_t *config)
   if (config->register_help)
     esp_console_register_help_command();
 
-  /* History always lives in RAM only; 'sync' is the only thing that ever
-   * writes it to flash, and it mounts the storage partition lazily on its
-   * first run — nothing here depends on that partition existing. */
+  /* History always lives in RAM only; 'history' prints or clears it, and
+   * 'sync' is the only thing that ever writes it to flash, mounting the
+   * storage partition lazily on its first run — nothing here depends on that
+   * partition existing. */
   if (config->history_sync)
+  {
+    cli_register_history_command();
     cli_register_history_sync_command();
+  }
 
   if (config->banner != NULL)
     printf("\n%s\n", config->banner);
@@ -103,7 +107,7 @@ esp_err_t cli_run(void)
     }
 
     if (strlen(line) > 0)
-      linenoiseHistoryAdd(line);
+      cli_history_add(line);
 
     /* Execute the command */
     int ret;
@@ -131,6 +135,7 @@ void cli_deinit(void)
   {
     esp_console_deinit();
     cli_deinit_filesystem(); /* no-op if 'sync' was never run */
+    cli_history_clear();
 
     s_cli.initialized = false;
     s_cli.cmd_count = 0;
