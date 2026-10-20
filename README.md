@@ -31,7 +31,7 @@ idf.py add-dependency "pedroluisdionisiofraga/cli-api"
 - **Multiple Argument Types**: Support for integers, strings, and boolean flags
 - **Automatic Help Generation**: Built-in help system for all registered commands
 - **Line Editing**: TAB completion, argument hints and UP/DOWN history, with the terminal mode auto-detected (or forced from menuconfig)
-- **Command History**: RAM-only by default (cleared on reset); the `history` command lists or clears it and the `sync` command persists it to flash on demand
+- **Command History**: kept in RAM; the `history` command lists or clears it, the `sync` command persists it to flash on demand and it is restored on the next boot
 - **Multiple Interface Support**: UART, USB_SERIAL_JTAG, and USB_CDC
 - **Example Commands**: Includes WiFi, NVS, and system management commands
 - **Clean C API**: No extern "C" wrappers needed, pure C implementation
@@ -74,7 +74,7 @@ For more details about connecting and configuring USB_OTG (including pin numbers
 
 ### Other configuration options
 
-Command history lives in RAM only and is cleared on every reset — nothing is written to flash unless you explicitly run the `sync` command (see [Command History](#command-history) below). Registering the `history` and `sync` commands is a compile-time choice (`cli_config_t.history_sync`), not a menuconfig option.
+Nothing is written to flash unless you explicitly run the `sync` command, and with `history_sync` the saved history is restored on the next boot (see [Command History](#command-history) below). Registering the `history` and `sync` commands is a compile-time choice (`cli_config_t.history_sync`), not a menuconfig option.
 
 Line editing (TAB completion, hints, UP/DOWN history) requires a terminal that understands VT100 escape sequences. `CLI API Configuration > Terminal mode` selects how the component decides:
 
@@ -330,14 +330,14 @@ The CLI-API wrapper automatically:
 
 ### Command History
 
-Command history always lives in RAM (via linenoise's own history buffer) and is accessible with the UP/DOWN arrow keys — it is cleared on every reset, and nothing is ever written to flash automatically.
+Command history lives in RAM (via linenoise's own history buffer) and is accessible with the UP/DOWN arrow keys. Nothing is ever written to flash automatically; without `history_sync` it is cleared on every reset.
 
-When `history_sync = true`, `cli_init()` also registers two commands:
+When `history_sync = true`, `cli_init()` also registers two commands and restores the saved history:
 
 - `history` lists the in-memory history, numbered from 1 (oldest first), and `history -c` clears it, UP/DOWN recall included.
-- Running `sync` mounts a FAT filesystem on the "storage" partition (lazily, the first time it's called) and saves the current in-memory history to `/data/history.txt`.
-- If no such partition exists, `sync` fails with a clear error telling you to add one — instead of `cli_init()` silently disabling history at boot with an easy-to-miss log line.
-- History is only ever restored if you load it yourself; the component does not read `/data/history.txt` back on boot.
+- `sync` saves the current in-memory history to `/data/history.txt` on the "storage" partition.
+- At boot, `cli_init()` mounts the "storage" partition and loads `/data/history.txt` back, so commands saved with `sync` are available to both UP/DOWN and `history` after a reset. A missing file (nothing synced yet) is ignored.
+- If no such partition exists, `cli_init()` logs a warning and history simply starts empty, and `sync` fails with a clear error telling you to add the partition.
 
 ## References
 

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- With `history_sync = true`, history saved by `sync` is now restored at boot, for both UP/DOWN recall and the `history` command. It was never read back after 1.1.0, so a reset lost it, and the next `sync` overwrote `/data/history.txt` with only the new session. `cli_init()` now mounts the "storage" partition at boot in this mode; a missing partition only logs a warning.
+
 ## [1.2.0] - 2026-10-20
 
 ### Added
