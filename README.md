@@ -78,7 +78,7 @@ Nothing is written to flash unless you explicitly run the `sync` command, and wi
 
 Line editing (TAB completion, hints, UP/DOWN history) requires a terminal that understands VT100 escape sequences. `CLI API Configuration > Terminal mode` selects how the component decides:
 
-- **Auto-detect** (default): probes the terminal at boot (`ESC[5n`) and falls back to dumb mode only if it doesn't answer. USB_SERIAL_JTAG always gets line editing, since the host is usually not attached yet at boot.
+- **Auto-detect** (default): probes the terminal at boot (`ESC[5n`) and falls back to dumb mode only if it doesn't answer within 500 ms. If the terminal sends an escape sequence later (an arrow key, or the probe reply arriving late because the host app had just connected), line editing is enabled from the next prompt. USB_SERIAL_JTAG always gets line editing, since the host is usually not attached yet at boot.
 - **Force line editing**: skips the probe. Use it if your terminal supports VT100 but Auto reports it doesn't.
 - **Force dumb mode**: skips the probe. Use it for Web Serial and other hosts that print escape sequences as text.
 
@@ -267,7 +267,7 @@ esp32>
 
 When using the default command line or PowerShell on Windows 10, you may see a message indicating that the console does not support escape sequences, as shown in the above output. To avoid such issues, it is recommended to run the serial monitor under [Windows Terminal](https://en.wikipedia.org/wiki/Windows_Terminal), which supports all required escape sequences for the app, unlike the default terminal. The main escape sequence of concern is the Device Status Report (`0x1b[5n`), which is used to check terminal capabilities. Any response to this sequence indicates support. This should not be an issue on Windows 11, where Windows Terminal is the default.
 
-If your terminal does support escape sequences but still gets the message (for example because the monitor attached after the probe ran at boot), select `CLI API Configuration > Terminal mode > Force line editing` in menuconfig to skip the probe.
+If your terminal does support escape sequences but still gets the message (for example because the monitor attached after the probe ran at boot), Auto-detect switches to line editing as soon as the terminal sends an escape sequence, so the first prompt may be plain. To avoid that, select `CLI API Configuration > Terminal mode > Force line editing` in menuconfig to skip the probe.
 
 ### No USB port appears
 
