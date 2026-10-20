@@ -100,6 +100,7 @@ esp_err_t cli_run(void)
   while (true)
   {
     /* Read line from user */
+    cli_console_prompt_begin();
     char *line = linenoise(s_cli.prompt);
 
     if (line == NULL)

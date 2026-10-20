@@ -16,6 +16,7 @@
  */
 
 #include <esp_console.h>
+#include <esp_log.h>
 #include <linenoise/linenoise.h>
 #include <sdkconfig.h>
 #include <stdbool.h>
@@ -24,6 +25,11 @@
 #include <unistd.h>
 
 #include "cli-api-private.h"
+
+#if CONFIG_CLI_API_TERMINAL_MODE_AUTO
+static const char *TAG = "cli-api";
+static bool s_line_editing_pending; /* set by cli_keep_byte(), applied by cli_console_prompt_begin() */
+#endif
 
 #define ASCII_BS  0x08
 #define ASCII_ESC 0x1B
@@ -55,6 +61,13 @@ static bool cli_keep_byte(unsigned char c)
     case ESC_NONE:
       if (c != ASCII_ESC || !linenoiseIsDumbMode())
         return true;
+#if CONFIG_CLI_API_TERMINAL_MODE_AUTO
+      /* A terminal that sends escape sequences (a key, or the reply to the boot
+       * probe arriving after its 500 ms timeout, e.g. right after the host app
+       * connected) supports line editing. Applied at the next prompt, not now:
+       * the line being read is still dumb and must keep dropping sequences. */
+      s_line_editing_pending = true;
+#endif
       s_esc_state = ESC_START;
       return false;
 
@@ -115,6 +128,18 @@ static ssize_t cli_read_bytes(int fd, void *buf, size_t count)
   } while (nread > 0 && kept == 0);
 
   return nread < 0 ? nread : kept;
+}
+
+void cli_console_prompt_begin(void)
+{
+#if CONFIG_CLI_API_TERMINAL_MODE_AUTO
+  if (s_line_editing_pending)
+  {
+    s_line_editing_pending = false;
+    linenoiseSetDumbMode(0);
+    ESP_LOGI(TAG, "Terminal sent an escape sequence, line editing enabled");
+  }
+#endif
 }
 
 void cli_init_linenoise(void)

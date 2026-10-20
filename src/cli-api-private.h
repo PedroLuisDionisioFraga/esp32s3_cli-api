@@ -73,6 +73,10 @@ void cli_init_peripheral(void);
 /** @brief Initialize linenoise and esp_console. Implemented in cli-api-console.c */
 void cli_init_linenoise(void);
 
+/** @brief Call before each linenoise() prompt: applies a pending dumb -> line editing switch.
+ *  Implemented in cli-api-console.c */
+void cli_console_prompt_begin(void);
+
 /** @brief Configure the console prompt string. Implemented in cli-api-console.c */
 void cli_setup_prompt(const char *prompt_str);
 
