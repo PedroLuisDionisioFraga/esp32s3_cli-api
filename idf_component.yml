@@ -25,5 +25,6 @@ tags:
 examples:
   - path: examples/basic
   - path: examples/advanced
+  - path: examples/terminal
 dependencies:
   idf: ">=6.0.0"

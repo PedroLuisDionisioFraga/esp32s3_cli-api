@@ -22,7 +22,7 @@ jobs:
         # All BLE-capable targets declared in idf_component.yml.
         idf_target: ["esp32", "esp32s3", "esp32c3", "esp32c6", "esp32h2"]
         # One entry per directory under examples/.
-        example: ["basic", "advanced"]
+        example: ["basic", "advanced", "terminal"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
