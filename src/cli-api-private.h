@@ -83,6 +83,10 @@ void cli_register_history_sync_command(void);
 /** @brief Add a line to linenoise's history (and to the copy 'history' prints). Implemented in cli-api-history.c */
 void cli_history_add(const char *line);
 
+/** @brief Add every line of a saved history file via cli_history_add(); silent if the file doesn't exist.
+ *  Implemented in cli-api-history.c */
+void cli_history_load(const char *path);
+
 /** @brief Clear linenoise's history and the copy 'history' prints. Implemented in cli-api-history.c */
 void cli_history_clear(void);
 
