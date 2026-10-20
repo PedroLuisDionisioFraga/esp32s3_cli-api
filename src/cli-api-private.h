@@ -43,6 +43,10 @@ typedef struct
                                                 *   until 'sync' mounts it for the first time */
   cli_registered_cmd_t cmds[CLI_MAX_COMMANDS]; /**< Registered commands */
   uint8_t cmd_count;                           /**< Number of registered commands */
+  char *history[CLI_HISTORY_SIZE];             /**< Copy of linenoise's history, oldest first, for 'history' */
+  uint16_t history_len;                        /**< Number of entries in history[] */
+  bool history_mirror;                         /**< true once 'history' is registered; only then is
+                                                *   history[] kept up to date */
 } cli_state_t;
 
 /**
@@ -75,5 +79,14 @@ void cli_setup_prompt(const char *prompt_str);
 /** @brief Register the optional 'sync' command (persists history to flash on demand).
  *  Implemented in cli-api-storage.c */
 void cli_register_history_sync_command(void);
+
+/** @brief Add a line to linenoise's history (and to the copy 'history' prints). Implemented in cli-api-history.c */
+void cli_history_add(const char *line);
+
+/** @brief Clear linenoise's history and the copy 'history' prints. Implemented in cli-api-history.c */
+void cli_history_clear(void);
+
+/** @brief Register the optional 'history' command (list, or clear with -c). Implemented in cli-api-history.c */
+void cli_register_history_command(void);
 
 #endif /* CLI_API_PRIVATE_H */

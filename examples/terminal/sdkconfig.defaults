@@ -1,0 +1,26 @@
+# Reduce bootloader log verbosity
+CONFIG_BOOTLOADER_LOG_LEVEL_WARN=y
+CONFIG_BOOTLOADER_LOG_LEVEL=2
+
+# Increase main task stack size
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=7168
+
+# Enable custom partition table with FAT storage for history
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions_example.csv"
+CONFIG_PARTITION_TABLE_FILENAME="partitions_example.csv"
+
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+
+# On chips with USB serial, disable secondary console
+CONFIG_ESP_CONSOLE_SECONDARY_NONE=y
+
+# Terminal mode (CLI API Configuration > Terminal mode). Auto probes the terminal at boot.
+CONFIG_CLI_API_TERMINAL_MODE_AUTO=y
+# CONFIG_CLI_API_TERMINAL_MODE_LINE_EDITING=y   # terminal doesn't answer ESC[5n in time
+# CONFIG_CLI_API_TERMINAL_MODE_DUMB=y           # Web Serial / non-VT100 hosts
+
+#
+# Format
+#
+CONFIG_LOG_COLORS=y

@@ -30,7 +30,8 @@ idf.py add-dependency "pedroluisdionisiofraga/cli-api"
 - **Simple Command Registration**: Define commands using declarative structs instead of complex argtable3 code
 - **Multiple Argument Types**: Support for integers, strings, and boolean flags
 - **Automatic Help Generation**: Built-in help system for all registered commands
-- **Command History**: RAM-only by default (cleared on reset); the `sync` command persists it to flash on demand
+- **Line Editing**: TAB completion, argument hints and UP/DOWN history, with the terminal mode auto-detected (or forced from menuconfig)
+- **Command History**: RAM-only by default (cleared on reset); the `history` command lists or clears it and the `sync` command persists it to flash on demand
 - **Multiple Interface Support**: UART, USB_SERIAL_JTAG, and USB_CDC
 - **Example Commands**: Includes WiFi, NVS, and system management commands
 - **Clean C API**: No extern "C" wrappers needed, pure C implementation
@@ -73,7 +74,15 @@ For more details about connecting and configuring USB_OTG (including pin numbers
 
 ### Other configuration options
 
-Command history lives in RAM only and is cleared on every reset — nothing is written to flash unless you explicitly run the `sync` command (see [Command History](#command-history) below). This is a compile-time choice (`cli_config_t.history_sync`), not a menuconfig option.
+Command history lives in RAM only and is cleared on every reset — nothing is written to flash unless you explicitly run the `sync` command (see [Command History](#command-history) below). Registering the `history` and `sync` commands is a compile-time choice (`cli_config_t.history_sync`), not a menuconfig option.
+
+Line editing (TAB completion, hints, UP/DOWN history) requires a terminal that understands VT100 escape sequences. `CLI API Configuration > Terminal mode` selects how the component decides:
+
+- **Auto-detect** (default): probes the terminal at boot (`ESC[5n`) and falls back to dumb mode only if it doesn't answer. USB_SERIAL_JTAG always gets line editing, since the host is usually not attached yet at boot.
+- **Force line editing**: skips the probe. Use it if your terminal supports VT100 but Auto reports it doesn't.
+- **Force dumb mode**: skips the probe. Use it for Web Serial and other hosts that print escape sequences as text.
+
+The [terminal example](examples/terminal) shows all of this in action.
 
 Whether an empty line (e.g. EOF/Ctrl+C on a dumb terminal) breaks the console loop or is silently ignored is controlled by this component's own `CLI API Configuration > Ignore empty lines returned by the console` menuconfig option, enabled (ignore) by default.
 
@@ -258,6 +267,8 @@ esp32>
 
 When using the default command line or PowerShell on Windows 10, you may see a message indicating that the console does not support escape sequences, as shown in the above output. To avoid such issues, it is recommended to run the serial monitor under [Windows Terminal](https://en.wikipedia.org/wiki/Windows_Terminal), which supports all required escape sequences for the app, unlike the default terminal. The main escape sequence of concern is the Device Status Report (`0x1b[5n`), which is used to check terminal capabilities. Any response to this sequence indicates support. This should not be an issue on Windows 11, where Windows Terminal is the default.
 
+If your terminal does support escape sequences but still gets the message (for example because the monitor attached after the probe ran at boot), select `CLI API Configuration > Terminal mode > Force line editing` in menuconfig to skip the probe.
+
 ### No USB port appears
 
 On Windows 10, macOS, Linux, USB CDC devices do not require additional drivers to be installed.
@@ -281,8 +292,8 @@ The `cli_init()` function handles:
 
 - NVS initialization
 - Console peripheral configuration (UART/USB)
-- Linenoise library setup with line editing, completion, and (RAM-only) history
-- Optionally registers the `sync` command (see [Command History](#command-history))
+- Linenoise library setup with line editing, completion, and (RAM-only) history, in the mode selected by `CLI API Configuration > Terminal mode`
+- Optionally registers the `history` and `sync` commands (see [Command History](#command-history))
 
 ### Command Registration
 
@@ -321,8 +332,9 @@ The CLI-API wrapper automatically:
 
 Command history always lives in RAM (via linenoise's own history buffer) and is accessible with the UP/DOWN arrow keys — it is cleared on every reset, and nothing is ever written to flash automatically.
 
-When `history_sync = true`, `cli_init()` also registers a `sync` command:
+When `history_sync = true`, `cli_init()` also registers two commands:
 
+- `history` lists the in-memory history, numbered from 1 (oldest first), and `history -c` clears it, UP/DOWN recall included.
 - Running `sync` mounts a FAT filesystem on the "storage" partition (lazily, the first time it's called) and saves the current in-memory history to `/data/history.txt`.
 - If no such partition exists, `sync` fails with a clear error telling you to add one — instead of `cli_init()` silently disabling history at boot with an easy-to-miss log line.
 - History is only ever restored if you load it yourself; the component does not read `/data/history.txt` back on boot.
